@@ -1,0 +1,33 @@
+[project]
+name = "review-company"
+version = "0.1.0"
+description = "Crawl pipeline for 1900.com.vn company reviews"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27",
+    "selectolax>=0.3",
+    "sqlalchemy>=2.0",
+    "psycopg2-binary>=2.9",
+    "alembic>=1.13",
+    "apache-airflow>=2.8",
+    "streamlit>=1.30",
+    "pandas>=2.2",
+    "pybloom-live>=4.0",
+    "python-dotenv>=1.0",
+    "underthesea>=6.8",
+    "tenacity>=8.2",
+    "pydantic>=2.5",
+    "pydantic-settings>=2.1",
+    "kafka-python>=2.0",
+    "pyspark>=3.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.2",
+    "pytest>=8.0",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"

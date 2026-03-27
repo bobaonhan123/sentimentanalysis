@@ -1,0 +1,157 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: review
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: review_company
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U review -d review_company"]
+      interval: 5s
+      retries: 5
+
+  # ── Kafka (KRaft – no ZooKeeper) ──────────────────────────────
+  kafka:
+    image: apache/kafka:3.9.0
+    environment:
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_LOG_RETENTION_HOURS: "24"
+      CLUSTER_ID: MkU3OEVBNTcwNTJENkM3MA
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── Spark Streaming consumer ──────────────────────────────────
+  spark-consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://review:changeme@postgres:5432/review_company
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPARK_CHECKPOINT_DIR: /opt/spark/checkpoints
+      APP_ROOT: /opt/spark/app
+    volumes:
+      - ./src:/opt/spark/app/src
+      - spark_checkpoints:/opt/spark/checkpoints
+    restart: unless-stopped
+
+  # ── Airflow (standalone for dev) ──────────────────────────────
+  airflow-init:
+    image: apache/airflow:2.10.4-python3.11
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment: &airflow-env
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://review:changeme@postgres:5432/review_company
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      DATABASE_URL: postgresql://review:changeme@postgres:5432/review_company
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      POSTGRES_HOST: postgres
+    volumes: &airflow-vols
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./.env:/opt/airflow/.env:ro
+      - airflow_bloom:/opt/airflow/bloom_data
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python &&
+        chmod -R 777 /opt/airflow/bloom_data &&
+        airflow db migrate &&
+        airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true
+    restart: "no"
+
+  airflow-webserver:
+    image: apache/airflow:2.10.4-python3.11
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    environment: *airflow-env
+    volumes: *airflow-vols
+    ports:
+      - "8080:8080"
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python &&
+        exec airflow webserver
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  airflow-scheduler:
+    image: apache/airflow:2.10.4-python3.11
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    environment: *airflow-env
+    volumes: *airflow-vols
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python &&
+        exec airflow scheduler
+    restart: unless-stopped
+
+  # ── Streamlit debug/export UI ─────────────────────────────────
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://review:changeme@postgres:5432/review_company
+      POSTGRES_HOST: postgres
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src:/app/src
+
+volumes:
+  pgdata:
+  airflow_bloom:
+  kafka_data:
+  spark_checkpoints:
