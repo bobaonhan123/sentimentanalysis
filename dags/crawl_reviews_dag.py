@@ -9,6 +9,7 @@ Stages:
   4. produce_reviews   — Crawl reviews per company → Kafka topic
   5. wait_reviews      — Wait for Spark consumer to ingest reviews into DB
   6. preprocess        — NLP preprocessing (normalize, stopwords, tokenize)
+  7. train_model       — Train sentiment models (auto-skip if data unchanged)
 """
 from __future__ import annotations
 
@@ -96,6 +97,20 @@ def _preprocess(**context):
     logger.info(f"Preprocessed {count} reviews")
 
 
+def _train_model(**context):
+    from src.training.trainer import train_pipeline
+    result = train_pipeline(force=False)
+    status = result.get("status", "unknown")
+    context["ti"].xcom_push(key="train_status", value=status)
+    if status == "success":
+        best = result.get("best_model", {})
+        logger.info(f"Training complete: {best.get('name')} (F1={best.get('f1_macro')})")
+    elif status == "skipped":
+        logger.info(f"Training skipped: {result.get('reason')}")
+    else:
+        logger.warning(f"Training result: {status}")
+
+
 with DAG(
     dag_id="crawl_1900_reviews",
     default_args=default_args,
@@ -141,4 +156,10 @@ with DAG(
         execution_timeout=timedelta(hours=1),
     )
 
-    init_db >> produce_companies >> wait_companies >> produce_reviews >> wait_reviews >> preprocess
+    train_model = PythonOperator(
+        task_id="train_model",
+        python_callable=_train_model,
+        execution_timeout=timedelta(hours=1),
+    )
+
+    init_db >> produce_companies >> wait_companies >> produce_reviews >> wait_reviews >> preprocess >> train_model

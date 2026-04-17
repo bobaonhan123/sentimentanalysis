@@ -11,10 +11,13 @@ if _ROOT not in sys.path:
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 from sqlalchemy import func, select, text
 
 from src.database import get_session
 from src.models import Company, Review
+from src.training.experiment import load_experiments
+from src.training.labeling import LABEL_NAMES
 
 st.set_page_config(page_title="1900.com.vn Review Explorer", layout="wide")
 st.title("🔍 1900.com.vn — Review Explorer & Export")
@@ -79,7 +82,9 @@ search_term = st.sidebar.text_input("Search (company name or review text)")
 
 
 # ── Tabs ──────────────────────────────────────────────────────────
-tab_companies, tab_reviews, tab_export = st.tabs(["🏢 Companies", "💬 Reviews", "📥 Export"])
+tab_companies, tab_reviews, tab_export, tab_experiments = st.tabs(
+    ["🏢 Companies", "💬 Reviews", "📥 Export", "🧪 Experiments"]
+)
 
 
 # ── Tab 1: Companies ─────────────────────────────────────────────
@@ -282,3 +287,146 @@ with tab_export:
             file_name=f"1900_export_{export_what.lower().replace(' ', '_')}.csv",
             mime="text/csv",
         )
+
+
+# ── Tab 4: Experiments ───────────────────────────────────────────
+with tab_experiments:
+    st.subheader("🧪 Training Experiments")
+
+    experiments = load_experiments()
+
+    if not experiments:
+        st.info("No experiments yet. Run `python run.py train` to train models.")
+    else:
+        # ── Latest run overview ──────────────────────────────
+        latest = experiments[-1]
+        st.markdown(f"**Latest run:** `{latest['run_id']}` — {latest.get('timestamp', 'N/A')}")
+        st.markdown(f"**Samples:** {latest.get('sample_count', 'N/A')} — **Balance method:** {latest.get('balance_method', 'N/A')}")
+
+        best = latest.get("best_model", {})
+        col_b1, col_b2, col_b3 = st.columns(3)
+        col_b1.metric("Best Model", best.get("name", "N/A"))
+        col_b2.metric("F1 Macro", f"{best.get('f1_macro', 0):.4f}")
+        col_b3.metric("Accuracy", f"{best.get('accuracy', 0):.4f}")
+
+        st.divider()
+
+        # ── Model comparison table ───────────────────────────
+        st.markdown("### Model Comparison")
+        model_results = latest.get("models", {})
+        comparison_rows = []
+        for name, res in model_results.items():
+            if "error" in res:
+                comparison_rows.append({"Model": name, "Status": f"Error: {res['error']}"})
+            else:
+                comparison_rows.append({
+                    "Model": name,
+                    "Accuracy": res.get("accuracy", 0),
+                    "F1 Macro": res.get("f1_macro", 0),
+                    "Precision": res.get("test", {}).get("precision_macro", 0),
+                    "Recall": res.get("test", {}).get("recall_macro", 0),
+                })
+        if comparison_rows:
+            df_comp = pd.DataFrame(comparison_rows)
+            st.dataframe(df_comp, use_container_width=True, hide_index=True)
+
+            # Bar chart comparison
+            valid_rows = [r for r in comparison_rows if "Accuracy" in r]
+            if valid_rows:
+                df_chart = pd.DataFrame(valid_rows)
+                import plotly.express as px
+                fig = px.bar(
+                    df_chart.melt(id_vars="Model", value_vars=["Accuracy", "F1 Macro", "Precision", "Recall"]),
+                    x="Model", y="value", color="variable", barmode="group",
+                    title="Model Performance Comparison",
+                    labels={"value": "Score", "variable": "Metric"},
+                )
+                fig.update_layout(yaxis_range=[0, 1])
+                st.plotly_chart(fig, use_container_width=True)
+
+        st.divider()
+
+        # ── Confusion matrices ───────────────────────────────
+        st.markdown("### Confusion Matrices (Test Set)")
+        cm_cols = st.columns(min(len(model_results), 2))
+        col_idx = 0
+        for name, res in model_results.items():
+            if "error" in res:
+                continue
+            cm = res.get("test", {}).get("confusion_matrix", [])
+            if not cm:
+                continue
+            with cm_cols[col_idx % len(cm_cols)]:
+                st.markdown(f"**{name}**")
+                labels = [LABEL_NAMES.get(i, str(i)) for i in range(len(cm))]
+                import plotly.figure_factory as ff
+                cm_array = np.array(cm)
+                # Annotate with counts
+                text_annot = [[str(v) for v in row] for row in cm]
+                fig_cm = ff.create_annotated_heatmap(
+                    cm_array, x=labels, y=labels, annotation_text=text_annot,
+                    colorscale="Blues", showscale=True,
+                )
+                fig_cm.update_layout(
+                    xaxis_title="Predicted", yaxis_title="Actual",
+                    width=350, height=350,
+                )
+                fig_cm.update_yaxes(autorange="reversed")
+                st.plotly_chart(fig_cm, use_container_width=True)
+            col_idx += 1
+
+        st.divider()
+
+        # ── Class distribution (before/after balancing) ──────
+        st.markdown("### Class Distribution")
+        dist_col1, dist_col2 = st.columns(2)
+
+        dist_before = latest.get("distribution_before", {})
+        dist_after = latest.get("distribution_after", {})
+
+        if dist_before:
+            with dist_col1:
+                st.markdown("**Before Balancing**")
+                df_dist_b = pd.DataFrame([
+                    {"Class": k, "Count": v["count"], "Pct": f"{v['percentage']}%"}
+                    for k, v in dist_before.items()
+                ])
+                st.dataframe(df_dist_b, hide_index=True)
+                fig_b = px.pie(df_dist_b, names="Class", values="Count", title="Before")
+                st.plotly_chart(fig_b, use_container_width=True)
+
+        if dist_after:
+            with dist_col2:
+                st.markdown("**After Balancing**")
+                df_dist_a = pd.DataFrame([
+                    {"Class": k, "Count": v["count"], "Pct": f"{v['percentage']}%"}
+                    for k, v in dist_after.items()
+                ])
+                st.dataframe(df_dist_a, hide_index=True)
+                fig_a = px.pie(df_dist_a, names="Class", values="Count", title="After")
+                st.plotly_chart(fig_a, use_container_width=True)
+
+        st.divider()
+
+        # ── History across runs ──────────────────────────────
+        if len(experiments) > 1:
+            st.markdown("### Training History")
+            history_rows = []
+            for exp in experiments:
+                bm = exp.get("best_model", {})
+                history_rows.append({
+                    "Run": exp.get("run_id", ""),
+                    "Timestamp": exp.get("timestamp", ""),
+                    "Samples": exp.get("sample_count", 0),
+                    "Best Model": bm.get("name", ""),
+                    "F1 Macro": bm.get("f1_macro", 0),
+                    "Accuracy": bm.get("accuracy", 0),
+                })
+            df_hist = pd.DataFrame(history_rows)
+            st.dataframe(df_hist, use_container_width=True, hide_index=True)
+
+            fig_hist = px.line(
+                df_hist, x="Timestamp", y=["F1 Macro", "Accuracy"],
+                title="Metrics Over Time", markers=True,
+            )
+            st.plotly_chart(fig_hist, use_container_width=True)

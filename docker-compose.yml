@@ -73,6 +73,7 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://review:changeme@postgres:5432/review_company
       AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
       DATABASE_URL: postgresql://review:changeme@postgres:5432/review_company
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -80,13 +81,15 @@ services:
     volumes: &airflow-vols
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
+      - ./models:/opt/airflow/models
+      - ./data_post_processing:/opt/airflow/data_post_processing
       - ./.env:/opt/airflow/.env:ro
       - airflow_bloom:/opt/airflow/bloom_data
     entrypoint: /bin/bash
     command:
       - -c
       - |
-        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python &&
+        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python scikit-learn imbalanced-learn joblib fasttext-wheel &&
         chmod -R 777 /opt/airflow/bloom_data &&
         airflow db migrate &&
         airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true
@@ -107,7 +110,7 @@ services:
     command:
       - -c
       - |
-        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python &&
+        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python scikit-learn imbalanced-learn joblib fasttext-wheel &&
         exec airflow webserver
     restart: unless-stopped
     healthcheck:
@@ -130,7 +133,7 @@ services:
     command:
       - -c
       - |
-        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python &&
+        pip install --quiet httpx selectolax psycopg2-binary pybloom-live underthesea tenacity pydantic pydantic-settings kafka-python scikit-learn imbalanced-learn joblib fasttext-wheel &&
         exec airflow scheduler
     restart: unless-stopped
 

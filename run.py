@@ -26,6 +26,10 @@ def main():
     # preprocess
     sub.add_parser("preprocess", help="Run NLP preprocessing on stored reviews")
 
+    # train
+    train_p = sub.add_parser("train", help="Train sentiment analysis models")
+    train_p.add_argument("--force", action="store_true", help="Force retrain even if data unchanged")
+
     # init-db
     sub.add_parser("init-db", help="Create/update database tables")
 
@@ -41,6 +45,18 @@ def main():
     elif args.command == "preprocess":
         from src.preprocessing.processor import preprocess_reviews
         preprocess_reviews()
+
+    elif args.command == "train":
+        from src.training.trainer import train_pipeline
+        result = train_pipeline(force=args.force)
+        status = result.get("status", "unknown")
+        if status == "success":
+            best = result.get("best_model", {})
+            print(f"✅ Training complete! Best model: {best['name']} (F1={best['f1_macro']}, Acc={best['accuracy']})")
+        elif status == "skipped":
+            print(f"⏭️ Training skipped: {result.get('reason')}")
+        else:
+            print(f"❌ Training failed: {result.get('reason', 'unknown')}")
 
     elif args.command == "init-db":
         from src.database import engine
