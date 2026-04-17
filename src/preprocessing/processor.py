@@ -5,11 +5,6 @@ import logging
 import re
 import unicodedata
 
-from sqlalchemy import select, update
-
-from src.database import get_session
-from src.models import Review
-
 logger = logging.getLogger(__name__)
 
 # ── Vietnamese stopwords (common function words) ──────────────────
@@ -108,6 +103,10 @@ def preprocess_reviews(batch_size: int = 500) -> int:
     Updates pros_clean and cons_clean columns.
     Returns count of processed reviews.
     """
+    from sqlalchemy import select
+    from src.database import get_session
+    from src.models import Review
+
     session = get_session()
     processed = 0
 
