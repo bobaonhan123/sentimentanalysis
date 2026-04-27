@@ -41,3 +41,8 @@ bloom_filter.bin
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Models
+models/*.bin
+models/*.bin.gz
+models/*.pkl

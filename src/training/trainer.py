@@ -352,6 +352,20 @@ def train_pipeline(force: bool = False, csv_path: str | None = None) -> dict:
     }
     save_experiment(experiment_record)
     _save_training_results(experiment_record)
+
+    try:
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location(
+            "generate_report",
+            Path(__file__).resolve().parents[2] / "analysis" / "generate_report.py",
+        )
+        _mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_mod)
+        report_path = _mod.generate()
+        logger.info(f"Report generated: {report_path}")
+    except Exception as e:
+        logger.warning(f"Report generation failed (non-critical): {e}")
+
     return {"status": "success", **experiment_record}
 
 
