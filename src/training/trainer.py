@@ -41,6 +41,7 @@ from src.training.labeling import LABEL_NAMES, load_labeled_data, _POSITIVE_KEYW
 from src.training.balancing import balance_with_class_weight, get_distribution
 from src.training.experiment import save_experiment
 from src.preprocessing.processor import preprocess
+from src.analysis.absa import run_absa
 
 logger = logging.getLogger(__name__)
 
@@ -155,6 +156,32 @@ def _get_ml_models():
     }
 
 
+# ── Training results snapshot (for final report) ────────────────
+
+_ANALYSIS_DIR = Path(__file__).resolve().parents[2] / "analysis"
+_TRAINING_RESULTS_FILE = _ANALYSIS_DIR / "training_results.json"
+
+
+def _save_training_results(record: dict) -> None:
+    """Append the experiment record to analysis/training_results.json for reporting."""
+    import json
+
+    _ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
+    existing: list[dict] = []
+    if _TRAINING_RESULTS_FILE.exists():
+        try:
+            existing = json.loads(_TRAINING_RESULTS_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, IOError):
+            existing = []
+
+    existing.append(record)
+    _TRAINING_RESULTS_FILE.write_text(
+        json.dumps(existing, indent=2, ensure_ascii=False, default=str),
+        encoding="utf-8",
+    )
+    logger.info(f"Training results saved: {_TRAINING_RESULTS_FILE}")
+
+
 # ── Main pipeline ──────────────────────────────────────────────
 
 def train_pipeline(force: bool = False, csv_path: str | None = None) -> dict:
@@ -163,6 +190,13 @@ def train_pipeline(force: bool = False, csv_path: str | None = None) -> dict:
     → train 5 models + ensemble → compare all 6 → save best.
     """
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # ── 0. ABSA analysis (runs before training, outputs saved to analysis/) ──
+    logger.info("── Running ABSA analysis before training ──")
+    absa_result = run_absa(csv_path=csv_path)
+    if absa_result["status"] != "success":
+        logger.warning(f"ABSA failed: {absa_result.get('reason')} — continuing without ABSA summary")
+        absa_result = {}
 
     # ── 1. Load & label ─────────────────────────────────────────
     logger.info("Loading labeled data from CSV...")
@@ -245,26 +279,23 @@ def train_pipeline(force: bool = False, csv_path: str | None = None) -> dict:
 
     # ── 7. Ensemble (soft voting from all successful models) ────
     logger.info("── Building Ensemble (soft voting) ──")
-    # Only models that support predict_proba for soft voting
-    ensemble_estimators = []
-    for name, model in trained_models.items():
-        if hasattr(model, "predict_proba"):
-            ensemble_estimators.append((name, model))
+    ensemble_models = {n: m for n, m in trained_models.items() if hasattr(m, "predict_proba")}
 
-    if len(ensemble_estimators) >= 2:
+    if len(ensemble_models) >= 2:
         try:
-            ensemble = VotingClassifier(
-                estimators=ensemble_estimators,
-                voting="soft",
-            )
-            # VotingClassifier needs to be fit, but models are already trained
-            # We use the trick: set estimators_ directly
-            ensemble.estimators_ = [m for _, m in ensemble_estimators]
-            ensemble.le_ = type("LabelEncoder", (), {"classes_": np.unique(y_train)})()
-            ensemble.classes_ = np.unique(y_train)
+            # Manual soft voting: average predicted probabilities
+            def ensemble_predict(X):
+                proba_list = [m.predict_proba(X) for m in ensemble_models.values()]
+                avg_proba = np.mean(proba_list, axis=0)
+                return np.argmax(avg_proba, axis=1)
 
-            y_val_ens = ensemble.predict(X_val)
-            y_test_ens = ensemble.predict(X_test)
+            y_val_ens = ensemble_predict(X_val)
+            y_test_ens = ensemble_predict(X_test)
+
+            # Map back to original label space (classes may be 0,1,2)
+            classes = np.unique(y_train)
+            y_val_ens = np.array([classes[i] for i in y_val_ens])
+            y_test_ens = np.array([classes[i] for i in y_test_ens])
 
             val_metrics = _evaluate(y_val, y_val_ens)
             test_metrics = _evaluate(y_test, y_test_ens)
@@ -272,14 +303,15 @@ def train_pipeline(force: bool = False, csv_path: str | None = None) -> dict:
             results["Ensemble_SoftVote"] = {
                 "type": "ensemble",
                 "balance": "weighted_loss",
-                "n_models": len(ensemble_estimators),
-                "members": [n for n, _ in ensemble_estimators],
+                "n_models": len(ensemble_models),
+                "members": list(ensemble_models.keys()),
                 "val": val_metrics,
                 "test": test_metrics,
                 "f1_macro": test_metrics["f1_macro"],
                 "accuracy": test_metrics["accuracy"],
             }
-            trained_models["Ensemble_SoftVote"] = ensemble
+            # Save ensemble as dict of models
+            trained_models["Ensemble_SoftVote"] = {"_ensemble": list(ensemble_models.keys())}
             logger.info(f"  Ensemble: acc={test_metrics['accuracy']}, f1={test_metrics['f1_macro']}")
         except Exception as e:
             logger.error(f"  Ensemble failed: {e}")
@@ -315,8 +347,11 @@ def train_pipeline(force: bool = False, csv_path: str | None = None) -> dict:
             "f1_macro": valid[best_name]["f1_macro"],
             "accuracy": valid[best_name]["accuracy"],
         },
+        "absa_summary": absa_result.get("summary", {}),
+        "absa_aspect_mentions": absa_result.get("aspect_mentions", 0),
     }
     save_experiment(experiment_record)
+    _save_training_results(experiment_record)
     return {"status": "success", **experiment_record}
 
 

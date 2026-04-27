@@ -5,23 +5,11 @@ import logging
 import re
 import unicodedata
 
+from src.preprocessing.stopwords_vi import ALL_STOPWORDS
+
 logger = logging.getLogger(__name__)
 
-# ── Vietnamese stopwords (common function words) ──────────────────
-# Compact set — extend as needed
-VIETNAMESE_STOPWORDS: set[str] = {
-    "và", "của", "là", "có", "được", "cho", "với", "trong", "này", "đã",
-    "để", "từ", "một", "không", "các", "những", "khi", "tại", "theo",
-    "về", "trên", "hay", "còn", "như", "hoặc", "đó", "nào", "thì",
-    "cũng", "vì", "nếu", "lại", "do", "bị", "đang", "sẽ", "rất",
-    "vẫn", "ra", "lên", "xuống", "vào", "nên", "mà", "nhưng", "thế",
-    "tôi", "bạn", "anh", "chị", "em", "họ", "mình", "ta",
-    "ở", "qua", "đến", "sau", "trước", "giữa", "dưới",
-    "rồi", "hơn", "quá", "phải", "chỉ", "cái", "gì", "ai",
-    "nhiều", "ít", "mỗi", "mọi", "tất", "cả",
-    "thì", "là", "bởi", "vì", "nên", "mặc", "dù",
-    "the", "and", "is", "of", "to", "in", "for", "a", "an",  # English stopwords mixed in
-}
+VIETNAMESE_STOPWORDS: frozenset[str] = ALL_STOPWORDS
 
 
 def normalize_text(text: str) -> str:

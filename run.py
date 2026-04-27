@@ -33,6 +33,11 @@ def main():
     # init-db
     sub.add_parser("init-db", help="Create/update database tables")
 
+    # absa
+    absa_p = sub.add_parser("absa", help="Run ABSA on review CSV (business analysis)")
+    absa_p.add_argument("--csv", default=None, help="Path to reviews CSV (default: analysis/1900_export_reviews.csv)")
+    absa_p.add_argument("--out", default=None, help="Output directory for CSV + PNG results (default: analysis/)")
+
     # streamlit
     sub.add_parser("ui", help="Launch Streamlit export UI")
 
@@ -57,6 +62,18 @@ def main():
             print(f"⏭️ Training skipped: {result.get('reason')}")
         else:
             print(f"❌ Training failed: {result.get('reason', 'unknown')}")
+
+    elif args.command == "absa":
+        from src.analysis.absa import run_absa
+        result = run_absa(csv_path=args.csv, out_dir=args.out)
+        if result["status"] == "success":
+            print(f"\nDone. {result['aspect_mentions']:,} aspect mentions across {result['total_reviews']:,} reviews.")
+            print(f"Summary CSV : {result['summary_csv']}")
+            print(f"Details CSV : {result['details_csv']}")
+            for c in result["charts"]:
+                print(f"Chart       : {c}")
+        else:
+            print(f"ABSA failed: {result.get('reason', 'unknown')}")
 
     elif args.command == "init-db":
         from src.database import engine

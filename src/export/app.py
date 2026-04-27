@@ -12,20 +12,33 @@ if _ROOT not in sys.path:
 import streamlit as st
 import pandas as pd
 import numpy as np
-from sqlalchemy import func, select, text
 
-from src.database import get_session
-from src.models import Company, Review
 from src.training.experiment import load_experiments
 from src.training.labeling import LABEL_NAMES
 
 st.set_page_config(page_title="1900.com.vn Review Explorer", layout="wide")
 st.title("🔍 1900.com.vn — Review Explorer & Export")
 
+# ── Try connecting to DB (optional) ─────────────────────────────
+_DB_AVAILABLE = False
+_DB_ERROR: str | None = None
+try:
+    from sqlalchemy import func, select, text
+    from src.database import get_session
+    from src.models import Company, Review
+    # Verify the connection actually works before marking DB as available
+    _test_session = get_session()
+    _test_session.execute(text("SELECT 1"))
+    _test_session.close()
+    _DB_AVAILABLE = True
+except Exception as _e:
+    _DB_ERROR = str(_e)
 
 # ── Sidebar: stats & filters ─────────────────────────────────────
 @st.cache_data(ttl=60)
 def get_stats():
+    if not _DB_AVAILABLE:
+        return 0, 0, 0
     session = get_session()
     company_count = session.execute(select(func.count(Company.id))).scalar() or 0
     review_count = session.execute(select(func.count(Review.id))).scalar() or 0
@@ -39,6 +52,8 @@ def get_stats():
 company_count, review_count, preprocessed_count = get_stats()
 
 st.sidebar.header("📊 Database Stats")
+if not _DB_AVAILABLE:
+    st.sidebar.warning(f"⚠️ DB not connected: {_DB_ERROR or 'unknown error'}")
 st.sidebar.metric("Companies", f"{company_count:,}")
 st.sidebar.metric("Reviews", f"{review_count:,}")
 st.sidebar.metric("Preprocessed", f"{preprocessed_count:,}")
@@ -49,6 +64,8 @@ st.sidebar.header("🔧 Filters")
 # ── Industry filter ──────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def get_industries():
+    if not _DB_AVAILABLE:
+        return []
     session = get_session()
     rows = session.execute(
         select(Company.industry).where(Company.industry.isnot(None)).distinct()
@@ -63,6 +80,8 @@ selected_industry = st.sidebar.selectbox("Industry", ["All"] + industries)
 # ── Location filter ──────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def get_locations():
+    if not _DB_AVAILABLE:
+        return []
     session = get_session()
     rows = session.execute(
         select(Company.location).where(Company.location.isnot(None)).distinct()
@@ -89,13 +108,18 @@ tab_companies, tab_reviews, tab_export, tab_experiments = st.tabs(
 
 # ── Tab 1: Companies ─────────────────────────────────────────────
 with tab_companies:
-    st.subheader("Companies")
+    if not _DB_AVAILABLE:
+        st.warning("⚠️ Database not connected. Start Postgres to use this tab.")
+    else:
+        st.subheader("Companies")
 
     page_size_c = st.selectbox("Page size", [20, 50, 100, 500], key="ps_c")
     page_num_c = st.number_input("Page", min_value=1, value=1, key="pn_c")
 
     @st.cache_data(ttl=30)
     def load_companies(_industry, _location, _min_rating, _search, _page, _page_size):
+        if not _DB_AVAILABLE:
+            return pd.DataFrame(), 0
         session = get_session()
         q = select(Company)
 
@@ -136,7 +160,10 @@ with tab_companies:
 
 # ── Tab 2: Reviews ───────────────────────────────────────────────
 with tab_reviews:
-    st.subheader("Reviews")
+    if not _DB_AVAILABLE:
+        st.warning("⚠️ Database not connected. Start Postgres to use this tab.")
+    else:
+        st.subheader("Reviews")
 
     page_size_r = st.selectbox("Page size", [20, 50, 100, 500], key="ps_r")
     page_num_r = st.number_input("Page", min_value=1, value=1, key="pn_r")
@@ -144,6 +171,8 @@ with tab_reviews:
 
     @st.cache_data(ttl=30)
     def load_reviews(_industry, _location, _min_rating, _search, _page, _page_size, _show_clean):
+        if not _DB_AVAILABLE:
+            return pd.DataFrame(), 0
         session = get_session()
         q = select(Review, Company.name.label("company_name")).join(Company, Review.company_id == Company.id)
 
@@ -201,7 +230,10 @@ with tab_reviews:
 
 # ── Tab 3: Export ─────────────────────────────────────────────────
 with tab_export:
-    st.subheader("Export to CSV")
+    if not _DB_AVAILABLE:
+        st.warning("⚠️ Database not connected. Start Postgres to use this tab.")
+    else:
+        st.subheader("Export to CSV")
 
     export_what = st.radio("Export", ["Companies", "Reviews", "Reviews (preprocessed)"])
 
@@ -212,81 +244,84 @@ with tab_export:
         include_all_fields = st.checkbox("Include all fields", value=True)
 
     if st.button("🚀 Generate CSV", type="primary"):
-        session = get_session()
-
-        if export_what == "Companies":
-            q = select(Company)
-            if selected_industry != "All":
-                q = q.where(Company.industry == selected_industry)
-            if selected_location != "All":
-                q = q.where(Company.location == selected_location)
-            if min_rating > 0:
-                q = q.where(Company.overall_rating >= min_rating)
-            if search_term:
-                q = q.where(Company.name.ilike(f"%{search_term}%"))
-            if export_limit > 0:
-                q = q.limit(export_limit)
-
-            rows = session.execute(q).scalars().all()
-            df = pd.DataFrame([{
-                "site_id": c.site_id,
-                "name": c.name,
-                "industry": c.industry,
-                "employee_range": c.employee_range,
-                "location": c.location,
-                "overall_rating": c.overall_rating,
-                "review_count": c.review_count,
-                "url": c.url,
-            } for c in rows])
-
+        if not _DB_AVAILABLE:
+            st.error(f"⚠️ Database not connected: {_DB_ERROR or 'unknown error'}")
         else:
-            q = select(Review, Company.name.label("company_name"), Company.industry.label("company_industry"))
-            q = q.join(Company, Review.company_id == Company.id)
-            if selected_industry != "All":
-                q = q.where(Company.industry == selected_industry)
-            if selected_location != "All":
-                q = q.where(Company.location == selected_location)
-            if min_rating > 0:
-                q = q.where(Review.rating >= min_rating)
-            if search_term:
-                q = q.where(
-                    Company.name.ilike(f"%{search_term}%")
-                    | Review.pros.ilike(f"%{search_term}%")
-                    | Review.cons.ilike(f"%{search_term}%")
-                )
-            if export_limit > 0:
-                q = q.limit(export_limit)
+            session = get_session()
 
-            rows = session.execute(q).all()
-            use_clean = "preprocessed" in export_what.lower()
+            if export_what == "Companies":
+                q = select(Company)
+                if selected_industry != "All":
+                    q = q.where(Company.industry == selected_industry)
+                if selected_location != "All":
+                    q = q.where(Company.location == selected_location)
+                if min_rating > 0:
+                    q = q.where(Company.overall_rating >= min_rating)
+                if search_term:
+                    q = q.where(Company.name.ilike(f"%{search_term}%"))
+                if export_limit > 0:
+                    q = q.limit(export_limit)
 
-            df = pd.DataFrame([{
-                "company": row[1],
-                "industry": row[2],
-                "rating": row[0].rating,
-                "title": row[0].title,
-                "job_title": row[0].job_title,
-                "employee_status": row[0].employee_status,
-                "location": row[0].review_location,
-                "date": row[0].review_date,
-                "pros": row[0].pros_clean if use_clean else row[0].pros,
-                "cons": row[0].cons_clean if use_clean else row[0].cons,
-                "advice": row[0].advice,
-                "recommends": row[0].recommends,
-            } for row in rows])
+                rows = session.execute(q).scalars().all()
+                df = pd.DataFrame([{
+                    "site_id": c.site_id,
+                    "name": c.name,
+                    "industry": c.industry,
+                    "employee_range": c.employee_range,
+                    "location": c.location,
+                    "overall_rating": c.overall_rating,
+                    "review_count": c.review_count,
+                    "url": c.url,
+                } for c in rows])
 
-        session.close()
+            else:
+                q = select(Review, Company.name.label("company_name"), Company.industry.label("company_industry"))
+                q = q.join(Company, Review.company_id == Company.id)
+                if selected_industry != "All":
+                    q = q.where(Company.industry == selected_industry)
+                if selected_location != "All":
+                    q = q.where(Company.location == selected_location)
+                if min_rating > 0:
+                    q = q.where(Review.rating >= min_rating)
+                if search_term:
+                    q = q.where(
+                        Company.name.ilike(f"%{search_term}%")
+                        | Review.pros.ilike(f"%{search_term}%")
+                        | Review.cons.ilike(f"%{search_term}%")
+                    )
+                if export_limit > 0:
+                    q = q.limit(export_limit)
 
-        st.success(f"Generated {len(df):,} rows")
-        st.dataframe(df.head(100), use_container_width=True)
+                rows = session.execute(q).all()
+                use_clean = "preprocessed" in export_what.lower()
 
-        csv = df.to_csv(index=False, encoding="utf-8-sig")
-        st.download_button(
-            label="⬇️ Download CSV",
-            data=csv,
-            file_name=f"1900_export_{export_what.lower().replace(' ', '_')}.csv",
-            mime="text/csv",
-        )
+                df = pd.DataFrame([{
+                    "company": row[1],
+                    "industry": row[2],
+                    "rating": row[0].rating,
+                    "title": row[0].title,
+                    "job_title": row[0].job_title,
+                    "employee_status": row[0].employee_status,
+                    "location": row[0].review_location,
+                    "date": row[0].review_date,
+                    "pros": row[0].pros_clean if use_clean else row[0].pros,
+                    "cons": row[0].cons_clean if use_clean else row[0].cons,
+                    "advice": row[0].advice,
+                    "recommends": row[0].recommends,
+                } for row in rows])
+
+            session.close()
+
+            st.success(f"Generated {len(df):,} rows")
+            st.dataframe(df.head(100), use_container_width=True)
+
+            csv = df.to_csv(index=False, encoding="utf-8-sig")
+            st.download_button(
+                label="⬇️ Download CSV",
+                data=csv,
+                file_name=f"1900_export_{export_what.lower().replace(' ', '_')}.csv",
+                mime="text/csv",
+            )
 
 
 # ── Tab 4: Experiments ───────────────────────────────────────────
