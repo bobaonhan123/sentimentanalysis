@@ -68,7 +68,7 @@
 	},
 	"scripts": {
 		"dev": "npm run start",
-		"start": "vite",
+		"start": "vite --config vite.presentation.config.js",
 		"prepack": "npm run build",
 		"build:core": "tsc && vite build && vite build -c vite.config.styles.ts && node scripts/add-banner.js dist/reveal.js",
 		"build:es5": "npm run build && node scripts/build-es5.js",
