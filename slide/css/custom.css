@@ -1,0 +1,353 @@
+/*
+  Palette — strictly 3 tones:
+  c1 = #ffffff  → titles, card-titles, key numbers, strong text
+  c2 = #aaaaaa  → body text, list items, descriptions
+  c3 = #4a7fc4  → meta, captions, borders, dim accents (steel blue)
+  bg = theme black (~#191919)
+*/
+:root {
+	--c1: #ffffff;
+	--c2: #aaaaaa;
+	--c3: #4a7fc4;
+	--bg-card: rgba(255, 255, 255, 0.05);
+	--border: rgba(74, 127, 196, 0.25);
+	/* aliases for legacy inline styles in partials */
+	--fg: #ffffff;
+	--dim: #4a7fc4;
+	--accent: #ffffff;
+	--accent2: #aaaaaa;
+	--red: #aaaaaa;
+	--yellow: #aaaaaa;
+}
+
+/* ── Base ────────────────────────────────────────────── */
+.reveal {
+	font-family: 'Segoe UI', Arial, sans-serif;
+}
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4 {
+	font-weight: 700;
+	text-transform: none;
+	letter-spacing: -0.02em;
+}
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4 {
+	color: var(--c1);
+}
+.reveal h1 {
+	font-size: 1.5em;
+	line-height: 1.1;
+}
+.reveal h2 {
+	font-size: 1em;
+	color: var(--c1);
+	margin-bottom: 0.2em;
+}
+.reveal h3 {
+	font-size: 0.78em;
+	color: var(--c2);
+}
+.reveal p,
+.reveal li {
+	font-size: 0.62em;
+	line-height: 1.45;
+	color: var(--c2);
+}
+.reveal section {
+	padding: 0 10px;
+}
+
+/* ── Section title slides ────────────────────────────── */
+.section-title {
+	background: #000000;
+}
+.section-title h2 {
+	font-size: 1.6em;
+	color: var(--c1);
+}
+.section-badge {
+	display: inline-block;
+	padding: 3px 14px;
+	background: var(--fg);
+	color: #000;
+	border-radius: 20px;
+	font-size: 0.58em;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	margin-bottom: 0.8em;
+}
+
+/* ── Cards ───────────────────────────────────────────── */
+.card {
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 7px 10px;
+	margin: 3px 0;
+}
+.card-title {
+	color: var(--c1);
+	font-weight: 700;
+	font-size: 0.62em;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	margin-bottom: 3px;
+}
+
+/* ── 2-col layout ────────────────────────────────────── */
+.cols {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+}
+.cols > * {
+	flex: 1;
+	min-width: 0;
+}
+.cols .col-wide {
+	flex: 1.5;
+}
+.cols .col-narrow {
+	flex: 0.7;
+}
+
+/* ── Tables ──────────────────────────────────────────── */
+.reveal table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.58em;
+	margin: 0.2em 0;
+}
+.reveal table th {
+	background: rgba(255, 255, 255, 0.08);
+	color: var(--c1);
+	font-weight: 700;
+	padding: 4px 6px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+	text-align: left;
+}
+.reveal table td {
+	padding: 3px 6px;
+	border-bottom: 1px solid var(--border);
+	color: var(--c2);
+}
+.reveal table tr:last-child td {
+	border-bottom: none;
+}
+.reveal table tr.highlight-row td {
+	color: var(--c1);
+	font-weight: 700;
+	background: rgba(255, 255, 255, 0.07);
+}
+.reveal table td.center,
+.reveal table th.center {
+	text-align: center;
+}
+
+/* ── Badges ──────────────────────────────────────────── */
+.badge {
+	display: inline-block;
+	border-radius: 5px;
+	padding: 2px 9px;
+	font-size: 0.72em;
+	font-weight: 700;
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--fg);
+}
+.badge-green {
+	background: rgba(255, 255, 255, 0.12);
+	color: var(--fg);
+}
+.badge-red {
+	background: rgba(255, 255, 255, 0.07);
+	color: var(--dim);
+}
+.badge-yellow {
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--fg);
+}
+.badge-blue {
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--fg);
+}
+
+/* ── Pipeline steps ──────────────────────────────────── */
+.pipeline {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	font-size: 0.54em;
+}
+.pipeline-step {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	background: var(--bg-card);
+	border-radius: 4px;
+	padding: 3px 8px;
+	border-left: 2px solid var(--c3);
+}
+.pipeline-step .num {
+	background: var(--c1);
+	color: #000;
+	border-radius: 50%;
+	width: 16px;
+	height: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 800;
+	font-size: 0.78em;
+	flex-shrink: 0;
+}
+.pipeline-step .op {
+	color: var(--c1);
+	font-weight: 700;
+	min-width: 150px;
+}
+.pipeline-step .why {
+	color: var(--c3);
+	font-size: 0.9em;
+}
+
+/* ── Metric boxes ────────────────────────────────────── */
+.metrics {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+.metric-box {
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 8px 12px;
+	text-align: center;
+	min-width: 70px;
+}
+.metric-box .val {
+	font-size: 1.3em;
+	font-weight: 800;
+	color: var(--c1);
+	line-height: 1;
+}
+.metric-box .lbl {
+	font-size: 0.52em;
+	color: var(--c3);
+	margin-top: 2px;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+
+/* ── Code ────────────────────────────────────────────── */
+.reveal pre {
+	font-size: 0.65em;
+	border-radius: 8px;
+}
+.reveal code.inline {
+	background: rgba(255, 255, 255, 0.07);
+	color: var(--c2);
+	padding: 1px 5px;
+	border-radius: 3px;
+	font-size: 0.85em;
+}
+
+/* ── Blockquote ──────────────────────────────────────── */
+.reveal blockquote {
+	border-left: 2px solid var(--c3);
+	background: rgba(255, 255, 255, 0.03);
+	padding: 5px 10px;
+	border-radius: 0 5px 5px 0;
+	font-style: italic;
+	font-size: 0.6em;
+	color: var(--c2);
+}
+
+/* ── Chart captions ──────────────────────────────────── */
+.chart-caption {
+	font-size: 0.6em;
+	color: var(--dim);
+	text-align: center;
+	margin-top: 4px;
+	font-style: italic;
+}
+
+/* ── Finding list ────────────────────────────────────── */
+.finding {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+	background: var(--bg-card);
+	border-radius: 6px;
+	padding: 7px 12px;
+	margin: 3px 0;
+	border-left: 2px solid var(--c3);
+}
+.finding.danger {
+	border-left-color: var(--c2);
+}
+.finding.warn {
+	border-left-color: var(--c2);
+}
+.finding .icon {
+	font-size: 0.9em;
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+.finding .body {
+	font-size: 0.52em;
+}
+.finding .body strong {
+	color: var(--c1);
+}
+.finding .body p {
+	color: var(--c3);
+	margin: 1px 0 0;
+}
+
+/* ── Architecture ────────────────────────────────────── */
+.arch-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	flex-wrap: wrap;
+	font-size: 0.54em;
+}
+.arch-box {
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: 5px;
+	padding: 6px 10px;
+	text-align: center;
+	min-width: 70px;
+}
+.arch-box .ico {
+	font-size: 1.1em;
+}
+.arch-box .lbl {
+	color: var(--c2);
+	font-size: 0.75em;
+	margin-top: 2px;
+}
+.arch-arrow {
+	color: var(--c2);
+	font-size: 0.9em;
+}
+
+/* ── 2×2 grid ───────────────────────────────────────── */
+.grid-2x2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+/* Reveal overrides */
+.reveal .slides section .fragment {
+	opacity: 1 !important;
+}

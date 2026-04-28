@@ -1,0 +1,111 @@
+<!-- SLIDE: Section 04 Header -->
+<section class="section-title">
+  <div class="section-badge">04</div>
+  <h2>Business Insights</h2>
+  <p style="color: #aaa; font-size: 0.55em">ABSA · 5 workplace aspects · Key findings · HR implications</p>
+</section>
+
+<!-- SLIDE: ABSA Method -->
+<section>
+  <h2>Aspect-Based Sentiment Analysis (ABSA)</h2>
+  <p style="font-size: 0.52em; color: #aaa; margin-bottom: 6px">
+    Rule-based keyword matching + lexicon opinion extraction ·
+    <code class="inline">src/analysis/absa.py</code>
+  </p>
+  <div class="cols">
+    <div>
+      <div class="card">
+        <div class="card-title">5 Workplace Aspects</div>
+        <div style="display: flex; flex-direction: column; gap: 3px; margin-top: 4px; font-size: 0.55em">
+          <div>💰 <strong>Salary &amp; Benefits</strong> — lương, thưởng, phúc lợi, đãi ngộ</div>
+          <div>🏢 <strong>Work Environment</strong> — môi trường, văn hóa, đồng nghiệp, toxic</div>
+          <div>👔 <strong>Management</strong> — quản lý, lãnh đạo, sếp, giám đốc</div>
+          <div>📈 <strong>Career Growth</strong> — thăng tiến, đào tạo, phát triển, kỹ năng</div>
+          <div>⚖️ <strong>Work-Life Balance</strong> — áp lực, overtime, deadline, stress</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Opinion Term Extraction (OTE)</div>
+        <ol style="font-size: 0.52em; color: #ccc; padding-left: 1.2em; margin: 0">
+          <li style="margin-bottom: 4px">Detect aspect keyword in tokenized text</li>
+          <li style="margin-bottom: 4px">Scan <strong>±3 token window</strong> for opinion terms</li>
+          <li style="margin-bottom: 4px">
+            Match against lexicons:
+            <span class="badge badge-green">24 positive</span> /
+            <span class="badge badge-red">32 negative</span> terms
+          </li>
+          <li>
+            Fallback: infer from source field
+            (<code class="inline">pros</code> → positive,
+            <code class="inline">cons</code> → negative)
+          </li>
+        </ol>
+      </div>
+      <div class="card" style="margin-top: 6px">
+        <div class="card-title">Total Mentions</div>
+        <div style="text-align: center; font-size: 1.2em; font-weight: 800; color: var(--accent)">9,354</div>
+        <div style="text-align: center; font-size: 0.55em; color: #aaa">aspect mentions across 10,000 reviews</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: ABSA Chart -->
+<section>
+  <h2>ABSA — Aspect Sentiment Distribution</h2>
+  <img
+    src="../analysis/chart_absa_summary.png"
+    style="width: 100%; border-radius: 10px; background: #fff; padding: 8px"
+    alt="ABSA grouped bar chart"
+  />
+  <div class="chart-caption">
+    Green = Positive mentions · Red = Negative mentions · 5 aspects across 10,000 reviews
+  </div>
+</section>
+
+<!-- SLIDE: Key Findings -->
+<section>
+  <h2>Key Findings</h2>
+
+  <div class="finding danger">
+    <div class="icon">🔴</div>
+    <div class="body">
+      <strong>Work-Life Balance — 83% negative</strong> (81 pos vs 383 neg)
+      <p>Dominated by: overtime, áp lực, quá tải, stress, deadline. Employees are burning out.</p>
+    </div>
+  </div>
+
+  <div class="finding danger" style="margin-top: 4px">
+    <div class="icon">🔴</div>
+    <div class="body">
+      <strong>Career Growth — 80% negative</strong> (348 pos vs 1,423 neg)
+      <p>Limited promotion tracks, insufficient training budget. Strongest pain point by volume.</p>
+    </div>
+  </div>
+
+  <div class="finding warn" style="margin-top: 4px">
+    <div class="icon">🟡</div>
+    <div class="body">
+      <strong>Work Environment — Most discussed</strong> (3,378 mentions · 54% negative)
+      <p>Both the most praised (1,568) and most complained about (1,810). Culture is polarizing — varies by team.</p>
+    </div>
+  </div>
+
+  <div class="finding warn" style="margin-top: 4px">
+    <div class="icon">🟡</div>
+    <div class="body">
+      <strong>Management — 60% negative</strong> (293 pos vs 434 neg)
+      <p>Keywords: thiếu tầm nhìn, không công bằng, micro-manage. Leadership quality inconsistent.</p>
+    </div>
+  </div>
+
+  <div class="finding" style="margin-top: 4px">
+    <div class="icon">🟢</div>
+    <div class="body">
+      <strong>Salary &amp; Benefits — Most balanced</strong> (1,617 pos vs 1,397 neg · 46% neg)
+      <p>Compensation is competitive but inconsistently applied. Mixed signal — benchmarking recommended.</p>
+    </div>
+  </div>
+</section>

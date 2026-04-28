@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+		/>
+
+		<title>Vietnamese Sentiment Analysis — BaoNhan</title>
+
+		<link rel="stylesheet" href="dist/reset.css" />
+		<link rel="stylesheet" href="dist/reveal.css" />
+		<link rel="stylesheet" href="dist/theme/black.css" />
+		<link rel="stylesheet" href="dist/plugin/highlight/monokai.css" />
+		<link rel="stylesheet" href="css/custom.css" />
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides" id="slides-container"></div>
+		</div>
+
+		<script src="dist/reveal.js"></script>
+		<script src="dist/plugin/notes.js"></script>
+		<script src="dist/plugin/highlight.js"></script>
+		<script>
+			const PARTIALS = [
+				"partials/01-title.html",
+				"partials/02-problem.html",
+				"partials/03-dataset.html",
+				"partials/04-preprocessing.html",
+				"partials/05-model.html",
+				"partials/06-results.html",
+				"partials/07-insights.html",
+				"partials/08-conclusion.html"
+			];
+
+			async function loadSlides() {
+				const container = document.getElementById("slides-container");
+				for (const path of PARTIALS) {
+					const res = await fetch(path);
+					const html = await res.text();
+					container.insertAdjacentHTML("beforeend", html);
+				}
+				Reveal.initialize({
+					hash: true,
+					slideNumber: "c/t",
+					transition: "slide",
+					backgroundTransition: "fade",
+					center: true,
+					width: 1280,
+					height: 720,
+					margin: 0.04,
+					plugins: [RevealHighlight, RevealNotes]
+				});
+			}
+
+			loadSlides();
+		</script>
+	</body>
+</html>

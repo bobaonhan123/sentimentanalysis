@@ -1,0 +1,112 @@
+<!-- SLIDE: Dataset Collection -->
+<section>
+  <h2>Dataset — Self-Collected from 1900.com.vn</h2>
+  <blockquote>
+    "We constructed a novel dataset by crawling 10,000 Vietnamese workplace reviews from
+    1900.com.vn — no pre-existing labeled corpus was available for this domain."
+  </blockquote>
+  <div class="cols" style="margin-top: 14px">
+    <div>
+      <div
+        class="card-title"
+        style="font-weight: 700; font-size: 0.56em;
+               text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px"
+      >
+        Collection Pipeline
+      </div>
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <div class="num">1</div>
+          <div class="op">Scraper</div>
+          <div class="why">Traverse 250 listing pages → each company's review pages</div>
+        </div>
+        <div class="pipeline-step" style="border-left-color: var(--accent)">
+          <div class="num" style="background: var(--accent)">2</div>
+          <div class="op">Bloom Filter</div>
+          <div class="why">Deduplicate already-crawled URLs</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="num">3</div>
+          <div class="op">Kafka Producer / Consumer</div>
+          <div class="why">Async message queue for resilient ingestion</div>
+        </div>
+        <div class="pipeline-step" style="border-left-color: var(--accent)">
+          <div class="num" style="background: var(--accent)">4</div>
+          <div class="op">NLP Preprocessing</div>
+          <div class="why">Normalize, tokenize, remove stopwords</div>
+        </div>
+        <div class="pipeline-step">
+          <div class="num">5</div>
+          <div class="op">PostgreSQL</div>
+          <div class="why">Persistent structured storage via ORM</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-narrow">
+      <div class="card">
+        <div class="card-title">Airflow Schedule</div>
+        <p style="color: #ccc; font-size: 0.65em">
+          DAG runs daily at <strong>02:00 AM</strong> —
+          incremental crawl ensures fresh data
+        </p>
+      </div>
+      <div class="card" style="margin-top: 10px">
+        <div class="card-title">Dataset Size</div>
+        <div style="text-align: center; padding: 8px 0">
+          <span style="font-size: 1.8em; font-weight: 800; color: var(--accent)">10,000</span><br />
+          <span style="font-size: 0.75em; color: #aaa">reviews · Vietnamese · Banking / Fintech</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Dataset Schema + Distribution -->
+<section>
+  <h2>Dataset — Schema &amp; Label Distribution</h2>
+  <div class="cols">
+    <div>
+      <div
+        class="card-title"
+        style="font-weight: 700; font-size: 0.56em;
+               text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px"
+      >
+        Schema (10 fields)
+      </div>
+      <table>
+        <thead><tr><th>Field</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code class="inline">rating</code></td><td>1–5 star score</td></tr>
+          <tr><td><code class="inline">pros</code></td><td>Positive free-text</td></tr>
+          <tr><td><code class="inline">cons</code></td><td>Negative free-text</td></tr>
+          <tr><td><code class="inline">advice</code></td><td>Suggestions to management</td></tr>
+          <tr><td><code class="inline">job_title</code></td><td>Reviewer's role</td></tr>
+          <tr><td><code class="inline">employee_status</code></td><td>Current / Former</td></tr>
+          <tr>
+            <td><code class="inline">company</code> / <code class="inline">industry</code></td>
+            <td>Company metadata</td>
+          </tr>
+          <tr>
+            <td><code class="inline">location</code> / <code class="inline">date</code></td>
+            <td>Where &amp; when</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div
+        class="card-title"
+        style="font-weight: 700; font-size: 0.56em;
+               text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px"
+      >
+        Class Distribution — Imbalanced
+      </div>
+      <img
+        src="../analysis/chart_class_distribution.png"
+        style="width: 100%; border-radius: 8px; background: #fff; padding: 6px"
+        alt="Class distribution pie chart"
+      />
+      <div class="chart-caption">60.7% Positive · 28.4% Negative · 10.9% Neutral — n=10,000</div>
+    </div>
+  </div>
+</section>

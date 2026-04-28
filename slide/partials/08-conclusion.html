@@ -1,0 +1,138 @@
+<!-- SLIDE: HR Roadmap -->
+<section>
+  <h2>HR Priority Roadmap</h2>
+  <p style="font-size: 0.75em; color: #aaa; margin-bottom: 16px">
+    Derived from ABSA negative ratios and mention volumes
+  </p>
+  <table>
+    <thead>
+      <tr><th>Priority</th><th>Area</th><th>Recommended Action</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-red">🔴 High</span></td>
+        <td>Work-Life Balance</td>
+        <td>Review overtime policies; introduce flexible / remote work arrangements</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-red">🔴 High</span></td>
+        <td>Career Growth</td>
+        <td>Structured promotion tracks; increase L&amp;D budget; mentorship programs</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-yellow">🟡 Medium</span></td>
+        <td>Management</td>
+        <td>Leadership coaching; implement 360-degree feedback mechanism</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-yellow">🟡 Medium</span></td>
+        <td>Work Environment</td>
+        <td>Culture audit; team-level action plans; address toxic sub-cultures</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-green">🟢 Monitor</span></td>
+        <td>Salary &amp; Benefits</td>
+        <td>Compensation benchmarking against fintech market rates; standardize banding</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- SLIDE: Architecture -->
+<section>
+  <h2>End-to-End System Architecture</h2>
+  <div class="arch-row" style="margin: 20px 0">
+    <div class="arch-box">
+      <div class="ico">⏰</div>
+      <div class="lbl">Airflow<br />(Daily 02:00)</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <div class="ico">🕷️</div>
+      <div class="lbl">Scraper<br />+ Bloom Filter</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <div class="ico">📨</div>
+      <div class="lbl">Kafka<br />Queue</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <div class="ico">🔤</div>
+      <div class="lbl">NLP<br />Preprocessor</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <div class="ico">🗄️</div>
+      <div class="lbl">PostgreSQL<br />ORM</div>
+    </div>
+  </div>
+  <div style="text-align: center; font-size: 1.2em; margin: 4px 0">↓</div>
+  <div class="arch-row">
+    <div class="arch-box">
+      <div class="ico">🧠</div>
+      <div class="lbl">FastText 300-dim<br />+ MLP Classifier</div>
+    </div>
+    <div class="arch-arrow">+</div>
+    <div class="arch-box">
+      <div class="ico">🔍</div>
+      <div class="lbl">ABSA<br />Rule Engine</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box">
+      <div class="ico">📊</div>
+      <div class="lbl">Streamlit<br />Dashboard</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top: 14px; font-size: 0.75em; text-align: center">
+    Run dashboard: <code class="inline">streamlit run analysis/dashboard.py --server.port 8502</code>
+  </div>
+</section>
+
+<!-- SLIDE: Conclusion -->
+<section>
+  <h2>Summary</h2>
+  <div class="cols">
+    <div>
+      <div class="card">
+        <div class="card-title">What We Built</div>
+        <ul style="font-size: 0.8em; color: #ccc; padding-left: 1.2em; margin: 0">
+          <li>Self-collected 10,000-review Vietnamese dataset</li>
+          <li>8-step NLP preprocessing for Vietnamese text</li>
+          <li>Weak supervision labeling from noisy star ratings</li>
+          <li>FastText + handcrafted 305-dim feature vector</li>
+          <li>6 ML models — MLP achieves 85.6% accuracy</li>
+          <li>ABSA over 5 workplace aspects (9,354 mentions)</li>
+          <li>Streamlit dashboard for HR analytics</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Key Results</div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.67em">
+            <span style="color: var(--c2)">Best accuracy (MLP)</span>
+            <span style="font-weight: 700">85.6%</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.67em">
+            <span style="color: var(--c2)">F1 Macro</span>
+            <span style="font-weight: 700">0.780</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.67em">
+            <span style="color: var(--c2)">Hardest class (Neutral)</span>
+            <span style="font-weight: 700">F1 = 0.621</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.67em">
+            <span style="color: var(--c2)">ABSA mentions</span>
+            <span style="font-weight: 700">9,354</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.67em">
+            <span style="color: var(--c2)">Biggest pain point</span>
+            <span style="font-weight: 700">Work-Life Balance 83% ⬇</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

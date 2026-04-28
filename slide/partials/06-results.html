@@ -1,0 +1,163 @@
+<!-- SLIDE: Results Table -->
+<section>
+  <h2>Experiment Results — 6 Models</h2>
+  <p style="font-size: 0.72em; color: #aaa; margin-bottom: 10px">
+    Split: 70% train / 15% val / 15% test · 10,000 samples total
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th class="center">Accuracy</th>
+        <th class="center">F1 Macro</th>
+        <th class="center">F1 Weighted</th>
+        <th class="center">Precision</th>
+        <th class="center">Recall</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight-row">
+        <td>⭐ MLP Neural Net</td>
+        <td class="center">85.6%</td>
+        <td class="center">0.780</td>
+        <td class="center">0.853</td>
+        <td class="center">0.793</td>
+        <td class="center">0.769</td>
+      </tr>
+      <tr>
+        <td>Ensemble (Soft Vote)</td>
+        <td class="center">85.3%</td>
+        <td class="center">0.775</td>
+        <td class="center">0.851</td>
+        <td class="center">0.783</td>
+        <td class="center">0.768</td>
+      </tr>
+      <tr>
+        <td>Linear SVC</td>
+        <td class="center">84.1%</td>
+        <td class="center">0.726</td>
+        <td class="center">0.831</td>
+        <td class="center">0.769</td>
+        <td class="center">0.706</td>
+      </tr>
+      <tr>
+        <td>Random Forest</td>
+        <td class="center">82.2%</td>
+        <td class="center">0.720</td>
+        <td class="center">0.808</td>
+        <td class="center">0.799</td>
+        <td class="center">0.682</td>
+      </tr>
+      <tr>
+        <td>Logistic Regression</td>
+        <td class="center">80.5%</td>
+        <td class="center">0.726</td>
+        <td class="center">0.817</td>
+        <td class="center">0.714</td>
+        <td class="center">0.760</td>
+      </tr>
+      <tr>
+        <td>Gaussian NB</td>
+        <td class="center">74.7%</td>
+        <td class="center">0.665</td>
+        <td class="center">0.765</td>
+        <td class="center">0.659</td>
+        <td class="center">0.703</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- SLIDE: Model Comparison Chart -->
+<section>
+  <h2>Model Comparison — Test Set</h2>
+  <img
+    src="../analysis/chart_model_comparison.png"
+    style="width: 100%; border-radius: 10px; background: #fff; padding: 8px"
+    alt="Model comparison bar chart"
+  />
+  <div class="chart-caption">MLP_NeuralNet leads across all 5 metrics</div>
+</section>
+
+<!-- SLIDE: Per-Class F1 Heatmap -->
+<section>
+  <h2>Per-Class F1 Score — All Models</h2>
+  <div class="cols" style="align-items: flex-start">
+    <div class="col-wide">
+      <img
+        src="../analysis/chart_per_class_f1.png"
+        style="width: 100%; border-radius: 10px; background: #fff; padding: 8px"
+        alt="Per-class F1 heatmap"
+      />
+      <div class="chart-caption">Heatmap: green = high F1, red = low F1 · Test set</div>
+    </div>
+    <div class="col-narrow">
+      <div class="card">
+        <div class="card-title">Best Model (MLP)</div>
+        <table style="margin: 0">
+          <thead><tr><th>Class</th><th class="center">F1</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-green">Positive</span></td>
+              <td class="center"><strong>0.921</strong></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-red">Negative</span></td>
+              <td class="center">0.797</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-yellow">Neutral</span></td>
+              <td class="center">0.621</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" style="margin-top: 10px">
+        <div class="card-title">Key Observation</div>
+        <p style="font-size: 0.63em; color: #ccc">
+          Neutral class is the hardest — only <strong>163 test samples</strong> (10.9%).
+          All models struggle here regardless of architecture.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Confusion Matrix -->
+<section>
+  <h2>Confusion Matrix — MLP Neural Net</h2>
+  <div class="cols" style="align-items: center">
+    <div>
+      <img
+        src="../analysis/chart_confusion_matrix.png"
+        style="width: 100%; border-radius: 10px; background: #fff; padding: 8px"
+        alt="Confusion matrix"
+      />
+      <div class="chart-caption">MLP_NeuralNet · Test set (n=1,500)</div>
+    </div>
+    <div class="col-narrow">
+      <div class="card">
+        <div class="card-title">Key Observations</div>
+        <ul style="font-size: 0.63em; color: #ccc; padding-left: 1.1em; margin: 0">
+          <li style="margin-bottom: 8px">
+            <strong>Positive</strong> class: 855/911 correct — 93.8% recall
+          </li>
+          <li style="margin-bottom: 8px">
+            <strong>57 negatives</strong> misclassified as positive
+            (13.4% FN rate) — HR risk
+          </li>
+          <li>
+            <strong>Neutral</strong>: 68 errors (41.7% error rate)
+            — smallest class, hardest to predict
+          </li>
+        </ul>
+      </div>
+      <div class="card" style="margin-top: 10px">
+        <div class="card-title">MLP Architecture</div>
+        <p style="font-size: 0.63em; color: #ccc">
+          256 → 128 → 64 hidden layers<br />Adam optimizer<br />Early stopping on val loss
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

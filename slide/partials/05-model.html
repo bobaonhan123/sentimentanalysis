@@ -1,0 +1,165 @@
+<!-- SLIDE: Section 03 Header -->
+<section class="section-title">
+  <div class="section-badge">03</div>
+  <h2>Model &amp; Training</h2>
+  <p style="color: #aaa; font-size: 0.8em">Feature engineering · Weak supervision · 6 models · Results</p>
+</section>
+
+<!-- SLIDE: Feature Engineering -->
+<section>
+  <h2>Feature Engineering — 305-dim Input Vector</h2>
+  <div class="cols">
+    <div class="col-wide">
+      <div class="card">
+        <div class="card-title">FastText Embeddings — 300 dimensions</div>
+        <ul style="font-size: 0.65em; color: #ccc; margin: 0; padding-left: 1.2em">
+          <li>Pretrained model: <code class="inline">cc.vi.300.bin</code> (Facebook AI · Vietnamese Common Crawl)</li>
+          <li>Weights are <strong>frozen</strong> — used as a semantic feature extractor, not fine-tuned</li>
+          <li>Mean pooling over all tokens → one 300-dim vector per review</li>
+          <li>Captures semantic similarity across Vietnamese vocabulary</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-top: 12px">
+        <div class="card-title">Handcrafted Features — 5 dimensions</div>
+        <table style="margin: 0">
+          <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code class="inline">char_len</code></td><td>Character length (normalized)</td></tr>
+            <tr><td><code class="inline">word_count</code></td><td>Token count post-tokenization</td></tr>
+            <tr><td><code class="inline">excl_ratio</code></td><td>Ratio of exclamation marks (!)</td></tr>
+            <tr><td><code class="inline">pos_ratio</code></td><td>Ratio of positive keywords detected</td></tr>
+            <tr><td><code class="inline">neg_ratio</code></td><td>Ratio of negative keywords detected</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="col-narrow">
+      <div class="card" style="text-align: center; padding: 28px 20px">
+        <div style="font-size: 0.7em; color: #aaa; margin-bottom: 8px">FINAL INPUT VECTOR</div>
+        <div style="font-size: 2.4em; font-weight: 800; color: var(--accent)">305</div>
+        <div style="font-size: 0.7em; color: #aaa; margin-top: 4px">dimensions</div>
+        <div style="margin-top: 16px; font-size: 0.6em; color: #ccc">
+          <span class="badge badge-blue">300</span> FastText<br />
+          <span style="font-size: 1.2em; line-height: 2">+</span><br />
+          <span class="badge badge-green">5</span> Handcrafted
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Weak Supervision -->
+<section>
+  <h2>Labeling Strategy — Weak Supervision</h2>
+  <p style="font-size: 0.62em; color: #aaa; margin-bottom: 12px">
+    User-assigned star ratings are noisy — a reviewer may give 4★ but write an overwhelmingly negative review.
+    <code class="inline">src/training/labeling.py</code>
+  </p>
+  <div class="cols">
+    <div>
+      <div class="card">
+        <div class="card-title">Base Labels (from star rating)</div>
+        <div style="display: flex; flex-direction: column; gap: 5px; font-size: 0.67em; margin-top: 6px">
+          <div><span class="badge badge-red">1–2★ → Negative</span></div>
+          <div><span class="badge badge-yellow">3★ → Neutral</span></div>
+          <div><span class="badge badge-green">4–5★ → Positive</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-wide">
+      <div class="card">
+        <div class="card-title">Override Rules (signal-based flip)</div>
+        <ol style="font-size: 0.63em; color: #ccc; margin: 0; padding-left: 1.2em">
+          <li style="margin-bottom: 8px">
+            <strong>Keyword signal</strong>: Count pos/neg keywords across pros + cons + advice
+          </li>
+          <li style="margin-bottom: 8px">
+            <strong>ABSA signal</strong>: Score aspect opinion terms;
+            <code class="inline">cons</code> column weighted <strong>1.5×</strong>
+            (complaints are more detailed)
+          </li>
+          <li>
+            <strong>Combined override:</strong>
+            <ul style="margin-top: 4px">
+              <li>Neutral + signal ≤ −1.5 → <span class="badge badge-red">flip Negative</span></li>
+              <li>Neutral + signal ≥ +1.5 → <span class="badge badge-green">flip Positive</span></li>
+              <li>Positive + ABSA ≤ −3 → <span class="badge badge-red">flip Negative</span></li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Class Imbalance -->
+<section>
+  <h2>Handling Class Imbalance</h2>
+  <div class="cols" style="align-items: center">
+    <div>
+      <div class="card">
+        <div class="card-title">Method: <code class="inline">class_weight='balanced'</code></div>
+        <p style="font-size: 0.65em; color: #ccc">
+          Applied to all sklearn estimators — adjusts loss function to penalize
+          errors on minority classes more heavily.
+        </p>
+      </div>
+      <div style="margin-top: 16px">
+        <table>
+          <thead><tr><th>Class</th><th>Share</th><th class="center">Weight</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-yellow">Neutral</span></td>
+              <td>10.9%</td>
+              <td class="center"><strong style="color: var(--accent)">3.07×</strong></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-red">Negative</span></td>
+              <td>28.4%</td>
+              <td class="center">1.17×</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-green">Positive</span></td>
+              <td>60.7%</td>
+              <td class="center">0.55×</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="padding: 24px">
+        <div style="font-size: 0.7em; color: #aaa; margin-bottom: 12px; text-align: center">CLASS WEIGHT VISUALIZATION</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.63em">
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px">
+              <span style="color: var(--fg)">Neutral (10.9%)</span>
+              <span style="font-weight: 700">3.07×</span>
+            </div>
+            <div style="background: rgba(255,255,255,.08); border-radius: 4px; height: 20px; overflow: hidden">
+              <div style="width: 100%; height: 100%; background: var(--fg); border-radius: 4px"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px">
+              <span style="color: var(--fg)">Negative (28.4%)</span>
+              <span style="color: var(--dim)">1.17×</span>
+            </div>
+            <div style="background: rgba(255,255,255,.08); border-radius: 4px; height: 20px; overflow: hidden">
+              <div style="width: 38%; height: 100%; background: rgba(255,255,255,0.6); border-radius: 4px"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px">
+              <span style="color: var(--dim)">Positive (60.7%)</span>
+              <span style="color: var(--dim)">0.55×</span>
+            </div>
+            <div style="background: rgba(255,255,255,.08); border-radius: 4px; height: 20px; overflow: hidden">
+              <div style="width: 18%; height: 100%; background: rgba(255,255,255,0.35); border-radius: 4px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

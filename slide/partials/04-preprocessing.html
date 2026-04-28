@@ -1,0 +1,101 @@
+<!-- SLIDE: Section 02 Header -->
+<section class="section-title">
+  <div class="section-badge">02</div>
+  <h2>Preprocessing Pipeline</h2>
+  <p style="color: #aaa; font-size: 0.8em">
+    Vietnamese-specific NLP · 8-step pipeline · underthesea
+  </p>
+</section>
+
+<!-- SLIDE: 8-Step Pipeline -->
+<section>
+  <h2>Text Preprocessing — 8 Steps</h2>
+  <p style="font-size: 0.75em; color: #aaa; margin-bottom: 14px">
+    <code class="inline">src/preprocessing/processor.py</code> —
+    Vietnamese text requires dedicated handling different from English
+  </p>
+  <div class="pipeline">
+    <div class="pipeline-step">
+      <div class="num">1</div>
+      <div class="op">Unicode NFC Normalization</div>
+      <div class="why">Standardize Vietnamese diacritics: à á ả ã ạ ắ ằ ầ ấ ...</div>
+    </div>
+    <div class="pipeline-step" style="border-left-color: var(--accent)">
+      <div class="num" style="background: var(--accent)">2</div>
+      <div class="op">Lowercase</div>
+      <div class="why">Reduce vocabulary size, normalize case variants</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="num">3</div>
+      <div class="op">Remove URLs &amp; Emails</div>
+      <div class="why">Strip http(s)://... and @email noise</div>
+    </div>
+    <div class="pipeline-step" style="border-left-color: var(--accent)">
+      <div class="num" style="background: var(--accent)">4</div>
+      <div class="op">Strip HTML Tags</div>
+      <div class="why">Remove leaked markup from web scraping</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="num">5</div>
+      <div class="op">Character Whitelist</div>
+      <div class="why">Keep Vietnamese chars + digits + . ! ? ; : - only</div>
+    </div>
+    <div class="pipeline-step" style="border-left-color: var(--accent)">
+      <div class="num" style="background: var(--accent)">6</div>
+      <div class="op">Collapse Whitespace</div>
+      <div class="why">Normalize excessive/irregular spacing</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="num">7</div>
+      <div class="op">Tokenization — <em>underthesea</em></div>
+      <div class="why">Vietnamese word segmentation (e.g. "phát_triển", "Hồ_Chí_Minh")</div>
+    </div>
+    <div class="pipeline-step">
+      <div class="num">8</div>
+      <div class="op">Stopword Removal</div>
+      <div class="why">Remove ~60 function words, pronouns, prepositions + English stopwords</div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Stopword Categories -->
+<section>
+  <h2>Stopword Categories</h2>
+  <p style="font-size: 0.52em; color: #aaa; margin-bottom: 8px">
+    <code class="inline">src/preprocessing/stopwords_vi.py</code>
+  </p>
+  <div class="cols">
+    <div>
+      <div class="card">
+        <div class="card-title">Vietnamese Function Words</div>
+        <p style="color: #bbb; font-size: 0.52em">có, được, là, làm, để, cho, sẽ, đã, đang, bị, phải, nên, cần, muốn...</p>
+      </div>
+      <div class="card" style="margin-top: 4px">
+        <div class="card-title">Conjunctions &amp; Particles</div>
+        <p style="color: #bbb; font-size: 0.52em">và, với, nhưng, nếu, khi, mà, vì, hay, hoặc...</p>
+      </div>
+      <div class="card" style="margin-top: 4px">
+        <div class="card-title">Prepositions</div>
+        <p style="color: #bbb; font-size: 0.52em">trong, trên, dưới, sau, trước, giữa, qua, đến, vào, ra...</p>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Pronouns</div>
+        <p style="color: #bbb; font-size: 0.52em">tôi, bạn, anh, chị, em, mình, họ, ta, chúng, người, ai...</p>
+      </div>
+      <div class="card" style="margin-top: 4px">
+        <div class="card-title">Quantifiers</div>
+        <p style="color: #bbb; font-size: 0.52em">các, những, mỗi, mọi, tất, cả, một, nhiều, ít...</p>
+      </div>
+      <div class="card" style="margin-top: 4px">
+        <div class="card-title">English Stopwords</div>
+        <p style="color: #bbb; font-size: 0.52em">the, and, is, of, to, in, for, a, an, it, at, be... (mixed-lang reviews)</p>
+      </div>
+      <div class="card" style="margin-top: 4px">
+        <div class="card-title">Compound Fragments</div>
+        <p style="color: #bbb; font-size: 0.52em">ty, trường, nghiệp, viên, triển, thiện... (split artifact tokens)</p>
+      </div>
+    </div>
+  </div>
+</section>
