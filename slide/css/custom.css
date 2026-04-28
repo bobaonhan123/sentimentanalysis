@@ -1,28 +1,34 @@
 /*
-  Palette — strictly 3 tones:
-  c1 = #ffffff  → titles, card-titles, key numbers, strong text
-  c2 = #aaaaaa  → body text, list items, descriptions
-  c3 = #4a7fc4  → meta, captions, borders, dim accents (steel blue)
-  bg = theme black (~#191919)
+  Light Mode Palette:
+  c1 = #1e293b  → headings, strong text (slate-800)
+  c2 = #64748b  → body text, descriptions (slate-500)
+  c3 = #3b82f6  → accent blue — borders, captions, links (blue-500)
+  c-pos = #16a34a  → positive / success
+  c-neg = #ef4444  → negative / danger
+  c-neu = #f59e0b  → neutral / warning
 */
 :root {
-	--c1: #ffffff;
-	--c2: #aaaaaa;
-	--c3: #4a7fc4;
-	--bg-card: rgba(255, 255, 255, 0.05);
-	--border: rgba(74, 127, 196, 0.25);
+	--c1: #1e293b;
+	--c2: #64748b;
+	--c3: #3b82f6;
+	--c-pos: #16a34a;
+	--c-neg: #ef4444;
+	--c-neu: #f59e0b;
+	--bg-card: #f8fafc;
+	--border: #e2e8f0;
+	--shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.05);
 	/* aliases for legacy inline styles in partials */
-	--fg: #ffffff;
-	--dim: #4a7fc4;
-	--accent: #ffffff;
-	--accent2: #aaaaaa;
-	--red: #aaaaaa;
-	--yellow: #aaaaaa;
+	--fg: #1e293b;
+	--dim: #3b82f6;
+	--accent: #3b82f6;
+	--accent2: #64748b;
+	--red: #ef4444;
+	--yellow: #f59e0b;
 }
 
 /* ── Base ────────────────────────────────────────────── */
 .reveal {
-	font-family: 'Segoe UI', Arial, sans-serif;
+	font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
 }
 .reveal h1,
 .reveal h2,
@@ -31,11 +37,6 @@
 	font-weight: 700;
 	text-transform: none;
 	letter-spacing: -0.02em;
-}
-.reveal h1,
-.reveal h2,
-.reveal h3,
-.reveal h4 {
 	color: var(--c1);
 }
 .reveal h1 {
@@ -63,32 +64,43 @@
 
 /* ── Section title slides ────────────────────────────── */
 .section-title {
-	background: #000000;
+	background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
+	border-radius: 12px;
 }
 .section-title h2 {
 	font-size: 1.6em;
-	color: var(--c1);
+	color: #ffffff !important;
+}
+.section-title p {
+	color: rgba(255, 255, 255, 0.75) !important;
+}
+.section-title .section-badge {
+	background: rgba(255, 255, 255, 0.2) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.35);
 }
 .section-badge {
 	display: inline-block;
-	padding: 3px 14px;
-	background: var(--fg);
-	color: #000;
+	padding: 4px 16px;
+	background: var(--c3);
+	color: #ffffff;
 	border-radius: 20px;
 	font-size: 0.58em;
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.12em;
 	margin-bottom: 0.8em;
+	animation: slideDown 0.4s ease both;
 }
 
 /* ── Cards ───────────────────────────────────────────── */
 .card {
 	background: var(--bg-card);
 	border: 1px solid var(--border);
-	border-radius: 6px;
-	padding: 7px 10px;
+	border-radius: 8px;
+	padding: 9px 12px;
 	margin: 3px 0;
+	box-shadow: var(--shadow);
 }
 .card-title {
 	color: var(--c1);
@@ -96,13 +108,13 @@
 	font-size: 0.62em;
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
-	margin-bottom: 3px;
+	margin-bottom: 4px;
 }
 
 /* ── 2-col layout ────────────────────────────────────── */
 .cols {
 	display: flex;
-	gap: 10px;
+	gap: 14px;
 	align-items: flex-start;
 }
 .cols > * {
@@ -124,15 +136,15 @@
 	margin: 0.2em 0;
 }
 .reveal table th {
-	background: rgba(255, 255, 255, 0.08);
+	background: #f1f5f9;
 	color: var(--c1);
 	font-weight: 700;
-	padding: 4px 6px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+	padding: 5px 8px;
+	border-bottom: 2px solid var(--border);
 	text-align: left;
 }
 .reveal table td {
-	padding: 3px 6px;
+	padding: 4px 8px;
 	border-bottom: 1px solid var(--border);
 	color: var(--c2);
 }
@@ -142,7 +154,7 @@
 .reveal table tr.highlight-row td {
 	color: var(--c1);
 	font-weight: 700;
-	background: rgba(255, 255, 255, 0.07);
+	background: #eff6ff;
 }
 .reveal table td.center,
 .reveal table th.center {
@@ -156,48 +168,49 @@
 	padding: 2px 9px;
 	font-size: 0.72em;
 	font-weight: 700;
-	background: rgba(255, 255, 255, 0.1);
-	color: var(--fg);
+	background: #f1f5f9;
+	color: var(--c1);
 }
 .badge-green {
-	background: rgba(255, 255, 255, 0.12);
-	color: var(--fg);
+	background: #dcfce7;
+	color: #15803d;
 }
 .badge-red {
-	background: rgba(255, 255, 255, 0.07);
-	color: var(--dim);
+	background: #fee2e2;
+	color: #b91c1c;
 }
 .badge-yellow {
-	background: rgba(255, 255, 255, 0.1);
-	color: var(--fg);
+	background: #fef3c7;
+	color: #92400e;
 }
 .badge-blue {
-	background: rgba(255, 255, 255, 0.1);
-	color: var(--fg);
+	background: #dbeafe;
+	color: #1d4ed8;
 }
 
 /* ── Pipeline steps ──────────────────────────────────── */
 .pipeline {
 	display: flex;
 	flex-direction: column;
-	gap: 2px;
+	gap: 3px;
 	font-size: 0.54em;
 }
 .pipeline-step {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: 8px;
 	background: var(--bg-card);
-	border-radius: 4px;
-	padding: 3px 8px;
-	border-left: 2px solid var(--c3);
+	border-radius: 6px;
+	padding: 5px 10px;
+	border-left: 3px solid var(--c3);
+	box-shadow: var(--shadow);
 }
 .pipeline-step .num {
-	background: var(--c1);
-	color: #000;
+	background: var(--c3);
+	color: #ffffff;
 	border-radius: 50%;
-	width: 16px;
-	height: 16px;
+	width: 18px;
+	height: 18px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -211,35 +224,36 @@
 	min-width: 150px;
 }
 .pipeline-step .why {
-	color: var(--c3);
+	color: var(--c2);
 	font-size: 0.9em;
 }
 
 /* ── Metric boxes ────────────────────────────────────── */
 .metrics {
 	display: flex;
-	gap: 8px;
+	gap: 12px;
 	justify-content: center;
 	flex-wrap: wrap;
 }
 .metric-box {
 	background: var(--bg-card);
 	border: 1px solid var(--border);
-	border-radius: 6px;
-	padding: 8px 12px;
+	border-radius: 10px;
+	padding: 12px 20px;
 	text-align: center;
-	min-width: 70px;
+	min-width: 80px;
+	box-shadow: var(--shadow);
 }
 .metric-box .val {
-	font-size: 1.3em;
+	font-size: 1.6em;
 	font-weight: 800;
-	color: var(--c1);
+	color: var(--c3);
 	line-height: 1;
 }
 .metric-box .lbl {
 	font-size: 0.52em;
-	color: var(--c3);
-	margin-top: 2px;
+	color: var(--c2);
+	margin-top: 3px;
 	text-transform: uppercase;
 	letter-spacing: 0.1em;
 }
@@ -248,51 +262,61 @@
 .reveal pre {
 	font-size: 0.65em;
 	border-radius: 8px;
+	box-shadow: var(--shadow);
 }
 .reveal code.inline {
-	background: rgba(255, 255, 255, 0.07);
-	color: var(--c2);
-	padding: 1px 5px;
-	border-radius: 3px;
+	background: #f1f5f9;
+	color: #0f172a;
+	padding: 1px 6px;
+	border-radius: 4px;
 	font-size: 0.85em;
+	border: 1px solid var(--border);
 }
 
 /* ── Blockquote ──────────────────────────────────────── */
 .reveal blockquote {
-	border-left: 2px solid var(--c3);
-	background: rgba(255, 255, 255, 0.03);
-	padding: 5px 10px;
-	border-radius: 0 5px 5px 0;
+	border-left: 3px solid var(--c3);
+	background: #eff6ff;
+	padding: 8px 14px;
+	border-radius: 0 8px 8px 0;
 	font-style: italic;
 	font-size: 0.6em;
 	color: var(--c2);
+	box-shadow: var(--shadow);
 }
 
 /* ── Chart captions ──────────────────────────────────── */
 .chart-caption {
 	font-size: 0.6em;
-	color: var(--dim);
+	color: var(--c2);
 	text-align: center;
-	margin-top: 4px;
+	margin-top: 6px;
 	font-style: italic;
 }
 
 /* ── Finding list ────────────────────────────────────── */
 .finding {
 	display: flex;
-	gap: 8px;
+	gap: 10px;
 	align-items: flex-start;
 	background: var(--bg-card);
-	border-radius: 6px;
-	padding: 7px 12px;
-	margin: 3px 0;
-	border-left: 2px solid var(--c3);
+	border-radius: 8px;
+	padding: 8px 14px;
+	margin: 4px 0;
+	border-left: 3px solid var(--c3);
+	box-shadow: var(--shadow);
 }
 .finding.danger {
-	border-left-color: var(--c2);
+	border-left-color: var(--c-neg);
+	background: #fff5f5;
 }
 .finding.warn {
-	border-left-color: var(--c2);
+	border-left-color: var(--c-neu);
+	background: #fffbf0;
+}
+.finding.success {
+	border-left-color: var(--c-pos);
+	background: #f0fdf4;
 }
 .finding .icon {
 	font-size: 0.9em;
@@ -306,8 +330,8 @@
 	color: var(--c1);
 }
 .finding .body p {
-	color: var(--c3);
-	margin: 1px 0 0;
+	color: var(--c2);
+	margin: 2px 0 0;
 }
 
 /* ── Architecture ────────────────────────────────────── */
@@ -315,39 +339,73 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 4px;
+	gap: 6px;
 	flex-wrap: wrap;
 	font-size: 0.54em;
 }
 .arch-box {
 	background: var(--bg-card);
 	border: 1px solid var(--border);
-	border-radius: 5px;
-	padding: 6px 10px;
+	border-radius: 8px;
+	padding: 8px 12px;
 	text-align: center;
-	min-width: 70px;
+	min-width: 80px;
+	box-shadow: var(--shadow);
 }
 .arch-box .ico {
-	font-size: 1.1em;
+	font-size: 1.3em;
 }
 .arch-box .lbl {
-	color: var(--c2);
-	font-size: 0.75em;
-	margin-top: 2px;
+	color: var(--c1);
+	font-size: 0.78em;
+	margin-top: 3px;
+	font-weight: 600;
 }
 .arch-arrow {
-	color: var(--c2);
-	font-size: 0.9em;
+	color: var(--c3);
+	font-size: 1em;
+	font-weight: 700;
 }
 
 /* ── 2×2 grid ───────────────────────────────────────── */
 .grid-2x2 {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 10px;
+	gap: 12px;
 }
 
-/* Reveal overrides */
-.reveal .slides section .fragment {
-	opacity: 1 !important;
+/* ── Progress & controls ─────────────────────────────── */
+.reveal .progress {
+	color: var(--c3);
+}
+.reveal .controls {
+	color: var(--c3);
+}
+.reveal .slide-number {
+	color: var(--c2);
+	background: rgba(248, 250, 252, 0.9);
+	border-radius: 4px;
+	padding: 2px 6px;
+}
+
+/* ── Keyframe animations ─────────────────────────────── */
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }

@@ -2,7 +2,7 @@
 <section class="section-title">
   <div class="section-badge">02</div>
   <h2>Preprocessing Pipeline</h2>
-  <p style="color: #aaa; font-size: 0.8em">
+  <p style="font-size: 0.8em">
     Vietnamese-specific NLP · 8-step pipeline · underthesea
   </p>
 </section>
@@ -10,7 +10,7 @@
 <!-- SLIDE: 8-Step Pipeline -->
 <section>
   <h2>Text Preprocessing — 8 Steps</h2>
-  <p style="font-size: 0.75em; color: #aaa; margin-bottom: 14px">
+  <p style="font-size: 0.75em; color: var(--c2); margin-bottom: 14px">
     <code class="inline">src/preprocessing/processor.py</code> —
     Vietnamese text requires dedicated handling different from English
   </p>
@@ -61,40 +61,40 @@
 <!-- SLIDE: Stopword Categories -->
 <section>
   <h2>Stopword Categories</h2>
-  <p style="font-size: 0.52em; color: #aaa; margin-bottom: 8px">
+  <p style="font-size: 0.52em; color: var(--c2); margin-bottom: 8px">
     <code class="inline">src/preprocessing/stopwords_vi.py</code>
   </p>
   <div class="cols">
     <div>
       <div class="card">
         <div class="card-title">Vietnamese Function Words</div>
-        <p style="color: #bbb; font-size: 0.52em">có, được, là, làm, để, cho, sẽ, đã, đang, bị, phải, nên, cần, muốn...</p>
+        <p style="color: var(--c2); font-size: 0.52em">có, được, là, làm, để, cho, sẽ, đã, đang, bị, phải, nên, cần, muốn...</p>
       </div>
       <div class="card" style="margin-top: 4px">
         <div class="card-title">Conjunctions &amp; Particles</div>
-        <p style="color: #bbb; font-size: 0.52em">và, với, nhưng, nếu, khi, mà, vì, hay, hoặc...</p>
+        <p style="color: var(--c2); font-size: 0.52em">và, với, nhưng, nếu, khi, mà, vì, hay, hoặc...</p>
       </div>
       <div class="card" style="margin-top: 4px">
         <div class="card-title">Prepositions</div>
-        <p style="color: #bbb; font-size: 0.52em">trong, trên, dưới, sau, trước, giữa, qua, đến, vào, ra...</p>
+        <p style="color: var(--c2); font-size: 0.52em">trong, trên, dưới, sau, trước, giữa, qua, đến, vào, ra...</p>
       </div>
     </div>
     <div>
       <div class="card">
         <div class="card-title">Pronouns</div>
-        <p style="color: #bbb; font-size: 0.52em">tôi, bạn, anh, chị, em, mình, họ, ta, chúng, người, ai...</p>
+        <p style="color: var(--c2); font-size: 0.52em">tôi, bạn, anh, chị, em, mình, họ, ta, chúng, người, ai...</p>
       </div>
       <div class="card" style="margin-top: 4px">
         <div class="card-title">Quantifiers</div>
-        <p style="color: #bbb; font-size: 0.52em">các, những, mỗi, mọi, tất, cả, một, nhiều, ít...</p>
+        <p style="color: var(--c2); font-size: 0.52em">các, những, mỗi, mọi, tất, cả, một, nhiều, ít...</p>
       </div>
       <div class="card" style="margin-top: 4px">
         <div class="card-title">English Stopwords</div>
-        <p style="color: #bbb; font-size: 0.52em">the, and, is, of, to, in, for, a, an, it, at, be... (mixed-lang reviews)</p>
+        <p style="color: var(--c2); font-size: 0.52em">the, and, is, of, to, in, for, a, an, it, at, be... (mixed-lang reviews)</p>
       </div>
       <div class="card" style="margin-top: 4px">
         <div class="card-title">Compound Fragments</div>
-        <p style="color: #bbb; font-size: 0.52em">ty, trường, nghiệp, viên, triển, thiện... (split artifact tokens)</p>
+        <p style="color: var(--c2); font-size: 0.52em">ty, trường, nghiệp, viên, triển, thiện... (split artifact tokens)</p>
       </div>
     </div>
   </div>

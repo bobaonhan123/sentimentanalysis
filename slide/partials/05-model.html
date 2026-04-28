@@ -2,7 +2,7 @@
 <section class="section-title">
   <div class="section-badge">03</div>
   <h2>Model &amp; Training</h2>
-  <p style="color: #aaa; font-size: 0.8em">Feature engineering · Weak supervision · 6 models · Results</p>
+  <p style="font-size: 0.8em">Feature engineering · Weak supervision · 6 models · Results</p>
 </section>
 
 <!-- SLIDE: Feature Engineering -->
@@ -12,7 +12,7 @@
     <div class="col-wide">
       <div class="card">
         <div class="card-title">FastText Embeddings — 300 dimensions</div>
-        <ul style="font-size: 0.65em; color: #ccc; margin: 0; padding-left: 1.2em">
+        <ul style="font-size: 0.65em; color: var(--c2); margin: 0; padding-left: 1.2em">
           <li>Pretrained model: <code class="inline">cc.vi.300.bin</code> (Facebook AI · Vietnamese Common Crawl)</li>
           <li>Weights are <strong>frozen</strong> — used as a semantic feature extractor, not fine-tuned</li>
           <li>Mean pooling over all tokens → one 300-dim vector per review</li>
@@ -35,10 +35,10 @@
     </div>
     <div class="col-narrow">
       <div class="card" style="text-align: center; padding: 28px 20px">
-        <div style="font-size: 0.7em; color: #aaa; margin-bottom: 8px">FINAL INPUT VECTOR</div>
-        <div style="font-size: 2.4em; font-weight: 800; color: var(--accent)">305</div>
-        <div style="font-size: 0.7em; color: #aaa; margin-top: 4px">dimensions</div>
-        <div style="margin-top: 16px; font-size: 0.6em; color: #ccc">
+        <div style="font-size: 0.7em; color: var(--c2); margin-bottom: 8px">FINAL INPUT VECTOR</div>
+        <div style="font-size: 2.4em; font-weight: 800; color: var(--c3)">305</div>
+        <div style="font-size: 0.7em; color: var(--c2); margin-top: 4px">dimensions</div>
+          <div style="margin-top: 16px; font-size: 0.6em; color: var(--c2)">
           <span class="badge badge-blue">300</span> FastText<br />
           <span style="font-size: 1.2em; line-height: 2">+</span><br />
           <span class="badge badge-green">5</span> Handcrafted
@@ -51,7 +51,7 @@
 <!-- SLIDE: Weak Supervision -->
 <section>
   <h2>Labeling Strategy — Weak Supervision</h2>
-  <p style="font-size: 0.62em; color: #aaa; margin-bottom: 12px">
+  <p style="font-size: 0.62em; color: var(--c2); margin-bottom: 12px">
     User-assigned star ratings are noisy — a reviewer may give 4★ but write an overwhelmingly negative review.
     <code class="inline">src/training/labeling.py</code>
   </p>
@@ -69,7 +69,7 @@
     <div class="col-wide">
       <div class="card">
         <div class="card-title">Override Rules (signal-based flip)</div>
-        <ol style="font-size: 0.63em; color: #ccc; margin: 0; padding-left: 1.2em">
+        <ol style="font-size: 0.63em; color: var(--c2); margin: 0; padding-left: 1.2em">
           <li style="margin-bottom: 8px">
             <strong>Keyword signal</strong>: Count pos/neg keywords across pros + cons + advice
           </li>
@@ -99,7 +99,7 @@
     <div>
       <div class="card">
         <div class="card-title">Method: <code class="inline">class_weight='balanced'</code></div>
-        <p style="font-size: 0.65em; color: #ccc">
+        <p style="font-size: 0.65em; color: var(--c2)">
           Applied to all sklearn estimators — adjusts loss function to penalize
           errors on minority classes more heavily.
         </p>
@@ -129,33 +129,33 @@
     </div>
     <div>
       <div class="card" style="padding: 24px">
-        <div style="font-size: 0.7em; color: #aaa; margin-bottom: 12px; text-align: center">CLASS WEIGHT VISUALIZATION</div>
+        <div style="font-size: 0.7em; color: var(--c2); margin-bottom: 12px; text-align: center">CLASS WEIGHT VISUALIZATION</div>
         <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.63em">
           <div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 3px">
-              <span style="color: var(--fg)">Neutral (10.9%)</span>
-              <span style="font-weight: 700">3.07×</span>
+              <span style="color: var(--c1); font-weight: 600">Neutral (10.9%)</span>
+              <span style="font-weight: 700; color: var(--c-neu)">3.07×</span>
             </div>
-            <div style="background: rgba(255,255,255,.08); border-radius: 4px; height: 20px; overflow: hidden">
-              <div style="width: 100%; height: 100%; background: var(--fg); border-radius: 4px"></div>
-            </div>
-          </div>
-          <div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 3px">
-              <span style="color: var(--fg)">Negative (28.4%)</span>
-              <span style="color: var(--dim)">1.17×</span>
-            </div>
-            <div style="background: rgba(255,255,255,.08); border-radius: 4px; height: 20px; overflow: hidden">
-              <div style="width: 38%; height: 100%; background: rgba(255,255,255,0.6); border-radius: 4px"></div>
+            <div style="background: rgba(15,23,42,0.08); border-radius: 4px; height: 20px; overflow: hidden">
+              <div style="width: 100%; height: 100%; background: var(--c-neu); border-radius: 4px"></div>
             </div>
           </div>
           <div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 3px">
-              <span style="color: var(--dim)">Positive (60.7%)</span>
-              <span style="color: var(--dim)">0.55×</span>
+              <span style="color: var(--c1); font-weight: 600">Negative (28.4%)</span>
+              <span style="font-weight: 700; color: var(--c-neg)">1.17×</span>
             </div>
-            <div style="background: rgba(255,255,255,.08); border-radius: 4px; height: 20px; overflow: hidden">
-              <div style="width: 18%; height: 100%; background: rgba(255,255,255,0.35); border-radius: 4px"></div>
+            <div style="background: rgba(15,23,42,0.08); border-radius: 4px; height: 20px; overflow: hidden">
+              <div style="width: 38%; height: 100%; background: var(--c-neg); border-radius: 4px"></div>
+            </div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px">
+              <span style="color: var(--c1); font-weight: 600">Positive (60.7%)</span>
+              <span style="font-weight: 700; color: var(--c-pos)">0.55×</span>
+            </div>
+            <div style="background: rgba(15,23,42,0.08); border-radius: 4px; height: 20px; overflow: hidden">
+              <div style="width: 18%; height: 100%; background: var(--c-pos); border-radius: 4px"></div>
             </div>
           </div>
         </div>
