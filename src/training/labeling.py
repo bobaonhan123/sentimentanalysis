@@ -49,12 +49,15 @@ _NEGATIVE_KEYWORDS = [
     "quá tải", "áp lực", "bóc lột", "không công bằng", "thiếu chuyên nghiệp",
     "hay thay đổi", "không ổn định", "môi trường độc hại", "overtime",
     "không có cơ hội", "trì trệ", "lãnh đạo kém", "quan liêu",
+    "không phù hợp", "không xứng đáng", "không minh bạch",
 ]
 _POSITIVE_KEYWORDS = [
     "tuyệt vời", "xuất sắc", "tốt", "chuyên nghiệp", "hài lòng",
     "lương cao", "phúc lợi", "cơ hội", "phát triển", "năng động",
     "thân thiện", "hỗ trợ", "linh hoạt", "ổn định", "học hỏi",
     "sáng tạo", "đãi ngộ tốt", "đồng nghiệp tốt", "cân bằng",
+    "không phàn nàn", "không có gì phàn nàn", "không có gì để chê",
+    "không có gì cần phàn nàn", "chịu khó", "kiên trì",
 ]
 
 # ── ABSA-derived opinion lexicons (mirrors src/analysis/absa.py) ─
@@ -63,9 +66,11 @@ _ABSA_POSITIVE = [
     "minh bạch", "công bằng", "hỗ trợ", "vui", "thân thiện", "chuyên nghiệp",
     "năng động", "cởi mở", "hợp lý", "xứng đáng", "phù hợp", "ổn định",
     "hiệu quả", "tuyệt vời", "hài lòng", "thoải mái", "cạnh tranh",
-    "tận tâm", "quan tâm",
+    "tận tâm", "quan tâm", "không phàn nàn", "không có gì phàn nàn",
+    "không có gì để chê", "chịu khó", "kiên trì",
 ]
 _ABSA_NEGATIVE = [
+    "không tốt", "không ổn", "không phù hợp", "không xứng đáng",
     "tệ", "kém", "chậm", "áp lực", "stress", "thấp", "thiếu", "ràng buộc",
     "bất công", "drama", "độc đoán", "toxic", "khắc khe", "ì ạch", "trễ",
     "cũ kỹ", "thất vọng", "khó khăn", "quá tải", "mệt", "chán",
@@ -83,10 +88,11 @@ def _keyword_score(text: str) -> float:
     return float(pos - neg)
 
 
-def _absa_score(pros: str, cons: str, advice: str) -> float:
+def _absa_score(title: str, pros: str, cons: str, advice: str) -> float:
     """ABSA-based score across pros/cons/advice fields.
 
-    cons is weighted 1.5x because employees write more specific complaints there.
+    The newer CSV often stores the full review body in `cons`, so cons no
+    longer receives an automatic negative-heavy weight.
     Returns a float: negative → negative sentiment, positive → positive sentiment.
     """
     def _field_score(text: str, weight: float = 1.0) -> float:
@@ -98,8 +104,9 @@ def _absa_score(pros: str, cons: str, advice: str) -> float:
         return (p - n) * weight
 
     return (
-        _field_score(pros, weight=1.0)
-        + _field_score(cons, weight=1.5)
+        _field_score(title, weight=1.0)
+        + _field_score(pros, weight=1.0)
+        + _field_score(cons, weight=1.0)
         + _field_score(advice, weight=0.5)
     )
 
@@ -109,6 +116,7 @@ def weak_label_combine(
     pros: str,
     cons: str,
     advice: str,
+    title: str = "",
 ) -> tuple[int, str]:
     """Combine star rating + ABSA aspect score into final weak label.
 
@@ -121,22 +129,27 @@ def weak_label_combine(
     - rating<=2 (star-negative) but ABSA score >= 3: flip to positive
       (rare, usually a data entry mistake or sarcasm — keep but log)
     """
-    kw_score = _keyword_score(" ".join(str(x) for x in [pros, cons, advice]))
-    absa = _absa_score(pros, cons, advice)
+    all_text = " ".join(str(x) for x in [title, pros, cons, advice])
+    kw_score = _keyword_score(all_text)
+    absa = _absa_score(title, pros, cons, advice)
     combined = kw_score + absa
 
     if rating_label == LABEL_MAP["neutral"]:
-        if combined <= -1.5:
+        if combined <= -2.5:
             return LABEL_MAP["negative"], "neutral→negative(absa)"
-        elif combined >= 1.5:
+        elif combined >= 2.5:
             return LABEL_MAP["positive"], "neutral→positive(absa)"
         return rating_label, "neutral(unchanged)"
 
-    if rating_label == LABEL_MAP["positive"] and combined <= -3:
+    if rating_label == LABEL_MAP["positive"] and combined <= -5:
         return LABEL_MAP["negative"], "positive→negative(absa_override)"
+    if rating_label == LABEL_MAP["positive"] and combined <= -2:
+        return LABEL_MAP["neutral"], "positive→neutral(absa_conflict)"
 
-    if rating_label == LABEL_MAP["negative"] and combined >= 3:
+    if rating_label == LABEL_MAP["negative"] and combined >= 5:
         return LABEL_MAP["positive"], "negative→positive(absa_override)"
+    if rating_label == LABEL_MAP["negative"] and combined >= 2:
+        return LABEL_MAP["neutral"], "negative→neutral(absa_conflict)"
 
     return rating_label, "rating"
 
@@ -180,7 +193,14 @@ def load_labeled_data(csv_path: str | Path | None = None) -> pd.DataFrame:
         pros_text = str(row.get("pros") or "")
         cons_text = str(row.get("cons") or "")
         advice_text = str(row.get("advice") or "")
-        label, label_source = weak_label_combine(rating_label, pros_text, cons_text, advice_text)
+        title_text = str(row.get("title") or "")
+        label, label_source = weak_label_combine(
+            rating_label,
+            pros_text,
+            cons_text,
+            advice_text,
+            title=title_text,
+        )
 
         records.append({
             "text": text,

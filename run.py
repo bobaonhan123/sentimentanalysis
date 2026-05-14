@@ -29,6 +29,7 @@ def main():
     # train
     train_p = sub.add_parser("train", help="Train sentiment analysis models")
     train_p.add_argument("--force", action="store_true", help="Force retrain even if data unchanged")
+    train_p.add_argument("--csv", default=None, help="Path to reviews CSV (default: data_post_processing/1900_export_reviews.csv)")
 
     # init-db
     sub.add_parser("init-db", help="Create/update database tables")
@@ -53,15 +54,15 @@ def main():
 
     elif args.command == "train":
         from src.training.trainer import train_pipeline
-        result = train_pipeline(force=args.force)
+        result = train_pipeline(force=args.force, csv_path=args.csv)
         status = result.get("status", "unknown")
         if status == "success":
             best = result.get("best_model", {})
-            print(f"✅ Training complete! Best model: {best['name']} (F1={best['f1_macro']}, Acc={best['accuracy']})")
+            print(f"Training complete. Best model: {best['name']} (F1={best['f1_macro']}, Acc={best['accuracy']})")
         elif status == "skipped":
-            print(f"⏭️ Training skipped: {result.get('reason')}")
+            print(f"Training skipped: {result.get('reason')}")
         else:
-            print(f"❌ Training failed: {result.get('reason', 'unknown')}")
+            print(f"Training failed: {result.get('reason', 'unknown')}")
 
     elif args.command == "absa":
         from src.analysis.absa import run_absa
@@ -79,7 +80,7 @@ def main():
         from src.database import engine
         from src.models import Base
         Base.metadata.create_all(engine)
-        print("✅ Tables created")
+        print("Tables created")
 
     elif args.command == "ui":
         import subprocess

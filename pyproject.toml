@@ -35,6 +35,9 @@ dev = [
     "ruff>=0.2",
     "pytest>=8.0",
 ]
+lstm = [
+    "tensorflow>=2.21",
+]
 
 [tool.ruff]
 line-length = 120

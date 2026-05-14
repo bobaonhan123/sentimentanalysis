@@ -222,13 +222,19 @@ def _build_markdown(runs: list[dict], charts: dict[str, Path], out_dir: Path) ->
     latest = runs[-1]
     best = latest["best_model"]
     models = {k: v for k, v in latest["models"].items() if "error" not in v}
+    skipped_models = {k: v for k, v in latest["models"].items() if "error" in v}
     dist = latest["distribution_before"]
     absa = latest.get("absa_summary", {})
+    absa_insights = latest.get("absa_insights", {})
 
     def img(p: Path | None) -> str:
         if p is None:
             return ""
         return f"![{p.stem}]({p.name})\n"
+
+    def existing_img(filename: str) -> str:
+        p = out_dir / filename
+        return img(p) if p.exists() else ""
 
     lines: list[str] = []
     a = lines.append
@@ -276,6 +282,14 @@ def _build_markdown(runs: list[dict], charts: dict[str, Path], out_dir: Path) ->
           f"{_fmt(t['f1_weighted'])} | {_fmt(t['precision_macro'])} | {_fmt(t['recall_macro'])} |")
 
     # ── Per-class F1 heatmap ──────────────────────────────────────
+    if skipped_models:
+        a("\n### Skipped / Failed Models\n")
+        a("| Model | Reason |")
+        a("|-------|--------|")
+        for name, res in skipped_models.items():
+            reason = str(res.get("error", "unknown")).replace("|", "/")
+            a(f"| {name} | `{reason}` |")
+
     a("\n---\n## 4. Per-Class F1 Score\n")
     a(img(charts.get("heatmap")))
     a("| Model | Negative F1 | Neutral F1 | Positive F1 |")
@@ -287,7 +301,9 @@ def _build_markdown(runs: list[dict], charts: dict[str, Path], out_dir: Path) ->
         pos = _fmt(cr.get("positive", {}).get("f1-score", 0))
         a(f"| {name} | {neg} | {neu} | {pos} |")
 
-    a("\n> **Note:** Neutral class is hardest — smallest support (163 samples) and highest class imbalance.")
+    best_cr_for_note = models[best["name"]]["test"]["classification_report"]
+    neutral_support = int(best_cr_for_note.get("neutral", {}).get("support", 0))
+    a(f"\n> **Note:** Neutral class remains the hardest; support in the test set is {neutral_support:,} samples.")
 
     # ── Best model detail ─────────────────────────────────────────
     a(f"\n---\n## 5. Best Model: {best['name']}\n")
@@ -329,6 +345,57 @@ def _build_markdown(runs: list[dict], charts: dict[str, Path], out_dir: Path) ->
         a(f"- Most praised: **{top_pos}** ({pos_totals[top_pos]:,} positive mentions)")
         a(f"- Most complained: **{top_neg}** ({neg_totals[top_neg]:,} negative mentions)")
         a(f"- Highest negative ratio: **{worst_ratio}** ({neg_ratios[worst_ratio]:.0%})")
+
+        if absa_insights:
+            a("\n### Detailed Drilldowns")
+            a(existing_img("absa_time_trend.png"))
+            a(existing_img("absa_industry_heatmap.png"))
+            a(existing_img("absa_company_volume_heatmap.png"))
+            a(existing_img("absa_employee_status_heatmap.png"))
+            a(existing_img("absa_keyword_bar.png"))
+
+            latest_hotspot = absa_insights.get("latest_period_hotspot")
+            if latest_hotspot:
+                a(
+                    "- Latest month hotspot: "
+                    f"**{latest_hotspot.get('aspect')}** in `{latest_hotspot.get('period_month')}` "
+                    f"({latest_hotspot.get('negative_pct')}% negative, "
+                    f"{latest_hotspot.get('mentions'):,} mentions)"
+                )
+
+            increases = absa_insights.get("largest_negative_ratio_increase") or []
+            if increases:
+                a("\n**Largest negative-ratio increases over time**")
+                a("| Aspect | Start Neg% | Latest Neg% | Delta | Latest Mentions |")
+                a("|--------|-----------:|------------:|------:|----------------:|")
+                for row in increases:
+                    a(
+                        f"| {row.get('aspect')} | {row.get('start_negative_pct')}% | "
+                        f"{row.get('latest_negative_pct')}% | {row.get('delta_pct')} pp | "
+                        f"{int(row.get('latest_mentions', 0)):,} |"
+                    )
+
+            hotspots = absa_insights.get("industry_hotspots") or []
+            if hotspots:
+                a("\n**Industry/aspect hotspots (min 20 mentions)**")
+                a("| Industry | Aspect | Mentions | Neg% |")
+                a("|----------|--------|---------:|-----:|")
+                for row in hotspots[:8]:
+                    a(
+                        f"| {row.get('industry')} | {row.get('aspect')} | "
+                        f"{int(row.get('Total Mentions', 0)):,} | {row.get('Negative %')}% |"
+                    )
+
+            company_hotspots = absa_insights.get("company_volume_hotspots") or []
+            if company_hotspots:
+                a("\n**Company-volume group hotspots**")
+                a("| Company Group | Aspect | Mentions | Neg% |")
+                a("|---------------|--------|---------:|-----:|")
+                for row in company_hotspots[:8]:
+                    a(
+                        f"| {row.get('company_volume_group')} | {row.get('aspect')} | "
+                        f"{int(row.get('Total Mentions', 0)):,} | {row.get('Negative %')}% |"
+                    )
 
     # ── History ───────────────────────────────────────────────────
     if len(runs) > 1:

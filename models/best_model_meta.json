@@ -1,0 +1,7 @@
+{
+  "name": "MLP_NeuralNet_Tuned",
+  "backend": "sklearn_fasttext",
+  "input_type": "features",
+  "model_path": "D:\\Project\\business analysis\\sentimentanalysis\\models\\best_model.pkl",
+  "scaler_path": "D:\\Project\\business analysis\\sentimentanalysis\\models\\scaler.pkl"
+}
