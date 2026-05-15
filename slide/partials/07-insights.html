@@ -2,136 +2,237 @@
 <section class="section-title">
   <div class="section-badge">04</div>
   <h2>Business Insights</h2>
-  <p style="font-size: 0.78em">ABSA · 5 workplace aspects · Key findings · HR implications</p>
-</section>
-
-<!-- SLIDE: Aspect Keyword Lexicons -->
-<section>
-  <h2>Aspect Keyword Lexicons</h2>
-  <p style="font-size: 0.52em; color: var(--c2); margin-bottom: 10px">
-    ATE + ACD step — keywords trigger aspect detection; opinion terms extracted from ±3 token window
-  </p>
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.52em">
-    <div style="display:flex; flex-direction:column; gap:0">
-      <div style="display:flex; align-items:baseline; gap:8px; padding:6px 10px; background:#eff6ff; border-radius:8px 8px 0 0; border-left:3px solid var(--c3)">
-        <span>💰</span>
-        <strong style="color:var(--c1)">Salary &amp; Benefits</strong>
-      </div>
-      <div style="padding:5px 10px 6px; background:#f8fafc; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; color:var(--c2); line-height:1.7">
-        lương · thưởng · phúc lợi · thu nhập · đãi ngộ · hoa hồng · tăng lương · bảo hiểm · trợ cấp · thù lao · lương thưởng · chế độ · benefit
-      </div>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:0">
-      <div style="display:flex; align-items:baseline; gap:8px; padding:6px 10px; background:#f0fdf4; border-radius:8px 8px 0 0; border-left:3px solid var(--c-pos)">
-        <span>🏢</span>
-        <strong style="color:var(--c1)">Work Environment</strong>
-      </div>
-      <div style="padding:5px 10px 6px; background:#f8fafc; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; color:var(--c2); line-height:1.7">
-        môi trường · văn hóa · đồng nghiệp · văn phòng · không khí · teamwork · nhóm · tập thể · cởi mở · thân thiện · hòa đồng · drama · toxic · culture
-      </div>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:0">
-      <div style="display:flex; align-items:baseline; gap:8px; padding:6px 10px; background:#fef3c7; border-radius:8px 8px 0 0; border-left:3px solid var(--c-neu)">
-        <span>👔</span>
-        <strong style="color:var(--c1)">Management &amp; Leadership</strong>
-      </div>
-      <div style="padding:5px 10px 6px; background:#f8fafc; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; color:var(--c2); line-height:1.7">
-        quản lý · lãnh đạo · sếp · giám đốc · trưởng phòng · cấp trên · ban lãnh đạo · manager · leadership · ban giám đốc · tầm nhìn · chính sách
-      </div>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:0">
-      <div style="display:flex; align-items:baseline; gap:8px; padding:6px 10px; background:#fdf2f8; border-radius:8px 8px 0 0; border-left:3px solid #a855f7">
-        <span>📈</span>
-        <strong style="color:var(--c1)">Career Growth</strong>
-      </div>
-      <div style="padding:5px 10px 6px; background:#f8fafc; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; color:var(--c2); line-height:1.7">
-        thăng tiến · học hỏi · phát triển · đào tạo · lộ trình · cơ hội · kỹ năng · training · kinh nghiệm · thăng chức · học được · nâng cao · tiến bộ · career
-      </div>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:0; grid-column: 1 / -1">
-      <div style="display:flex; align-items:baseline; gap:8px; padding:6px 10px; background:#fff5f5; border-radius:8px 8px 0 0; border-left:3px solid var(--c-neg)">
-        <span>⚖️</span>
-        <strong style="color:var(--c1)">Work-Life Balance</strong>
-      </div>
-      <div style="padding:5px 10px 6px; background:#f8fafc; border:1px solid var(--border); border-top:none; border-radius:0 0 8px 8px; color:var(--c2); line-height:1.7">
-        áp lực · overtime · tăng ca · workload · deadline · cân bằng · giờ làm · stress · quá tải · nghỉ phép · nghỉ ngơi · làm thêm · chấm công · giờ giấc
-      </div>
-    </div>
-  </div>
+  <p style="font-size: 0.78em">ABSA - 10 workplace aspects - time trend - segment hotspots</p>
 </section>
 
 <!-- SLIDE: ABSA Method -->
 <section>
   <h2>Aspect-Based Sentiment Analysis (ABSA)</h2>
-  <p style="font-size: 0.52em; color: var(--c2); margin-bottom: 6px">
-    Rule-based keyword matching + lexicon opinion extraction ·
-    <code class="inline">src/analysis/absa.py</code>
+  <p style="font-size: 0.55em; color: var(--c2); margin-bottom: 8px">
+    Rule-based keyword matching + lexicon opinion extraction in
+    <code class="inline">src/analysis/absa.py</code>. Current source:
+    <code class="inline">data_post_processing/1900_export_reviews.csv</code>.
   </p>
   <div class="cols">
     <div>
       <div class="card">
-        <div class="card-title">5 Workplace Aspects</div>
-        <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 6px; font-size: 0.57em">
-          <div style="display:flex; align-items:center; gap:8px; padding: 4px 8px; background:#eff6ff; border-radius:6px; border-left:3px solid var(--c3)">
-            <span style="font-size:1.1em">💰</span>
-            <div><strong style="color:var(--c1)">Salary &amp; Benefits</strong><span style="color:var(--c2)"> — lương, thưởng, phúc lợi, đãi ngộ</span></div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; padding: 4px 8px; background:#f0fdf4; border-radius:6px; border-left:3px solid var(--c-pos)">
-            <span style="font-size:1.1em">🏢</span>
-            <div><strong style="color:var(--c1)">Work Environment</strong><span style="color:var(--c2)"> — môi trường, văn hóa, đồng nghiệp</span></div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; padding: 4px 8px; background:#fef3c7; border-radius:6px; border-left:3px solid var(--c-neu)">
-            <span style="font-size:1.1em">👔</span>
-            <div><strong style="color:var(--c1)">Management</strong><span style="color:var(--c2)"> — quản lý, lãnh đạo, sếp, giám đốc</span></div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; padding: 4px 8px; background:#fdf2f8; border-radius:6px; border-left:3px solid #a855f7">
-            <span style="font-size:1.1em">📈</span>
-            <div><strong style="color:var(--c1)">Career Growth</strong><span style="color:var(--c2)"> — thăng tiến, đào tạo, phát triển</span></div>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px; padding: 4px 8px; background:#fff5f5; border-radius:6px; border-left:3px solid var(--c-neg)">
-            <span style="font-size:1.1em">⚖️</span>
-            <div><strong style="color:var(--c1)">Work-Life Balance</strong><span style="color:var(--c2)"> — áp lực, overtime, deadline, stress</span></div>
-          </div>
+        <div class="card-title">10 Aspect Taxonomy</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.5em; color: var(--c2)">
+          <div>Salary &amp; Benefits</div>
+          <div>Work Environment</div>
+          <div>Career Growth</div>
+          <div>Management &amp; Leadership</div>
+          <div>Work-Life Balance</div>
+          <div>Facilities &amp; Tools</div>
+          <div>Job Security &amp; Stability</div>
+          <div>Process &amp; Communication</div>
+          <div>Technology &amp; Product</div>
+          <div>Recruitment &amp; Onboarding</div>
         </div>
+      </div>
+      <div class="card" style="margin-top: 8px">
+        <div class="card-title">Pipeline</div>
+        <ol style="font-size: 0.52em; color: var(--c2); padding-left: 1.2em; margin: 0">
+          <li>Split pros, cons, and advice into sentence fragments</li>
+          <li>Detect aspect keywords; one sentence can map to multiple aspects</li>
+          <li>Search a +/-6 token window for opinion terms</li>
+          <li>Fallback uses rating/source only when no local opinion word is found</li>
+        </ol>
       </div>
     </div>
     <div>
       <div class="card">
-        <div class="card-title">Opinion Term Extraction (OTE)</div>
-        <ol style="font-size: 0.52em; color: var(--c2); padding-left: 1.2em; margin: 0">
-          <li style="margin-bottom: 4px">Detect aspect keyword in tokenized text</li>
-          <li style="margin-bottom: 4px">Scan <strong>±3 token window</strong> for opinion terms</li>
-          <li style="margin-bottom: 4px">
-            Match against lexicons:
-            <span class="badge badge-green">24 positive</span> /
-            <span class="badge badge-red">32 negative</span> terms
-          </li>
-          <li>
-            Fallback: infer from source field
-            (<code class="inline">pros</code> → positive,
-            <code class="inline">cons</code> → negative)
-          </li>
-        </ol>
+        <div class="card-title">Current ABSA Output</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align:center">
+          <div>
+            <div style="font-size: 1.3em; font-weight: 800; color: var(--accent)">10,000</div>
+            <div style="font-size: 0.52em; color: var(--c2)">reviews</div>
+          </div>
+          <div>
+            <div style="font-size: 1.3em; font-weight: 800; color: var(--accent)">32,789</div>
+            <div style="font-size: 0.52em; color: var(--c2)">aspect mentions</div>
+          </div>
+          <div>
+            <div style="font-size: 1.1em; font-weight: 800; color: var(--c-neg)">5,626</div>
+            <div style="font-size: 0.52em; color: var(--c2)">salary complaints</div>
+          </div>
+          <div>
+            <div style="font-size: 1.1em; font-weight: 800; color: var(--c-pos)">5,773</div>
+            <div style="font-size: 0.52em; color: var(--c2)">work-env praise</div>
+          </div>
+        </div>
       </div>
-      <div class="card" style="margin-top: 6px">
-        <div class="card-title">Total Mentions</div>
-        <div style="text-align: center; font-size: 1.2em; font-weight: 800; color: var(--accent)">9,354</div>
-        <div style="text-align: center; font-size: 0.55em; color: var(--c2)">aspect mentions across 10,000 reviews</div>
+      <div class="card" style="margin-top: 8px">
+        <div class="card-title">Reading the Chart</div>
+        <p style="font-size: 0.55em; color: var(--c2); margin: 0">
+          Work Environment has the highest discussion volume, while Salary &amp; Benefits is the clearest negative outlier:
+          60% of its mentions are negative, far above Career Growth and Management at roughly 16-17%.
+        </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE: ABSA Chart -->
+<!-- SLIDE: ABSA Overview Chart -->
 <section>
-  <h2>ABSA — Aspect Sentiment Distribution</h2>
+  <h2>ABSA - Aspect Sentiment Distribution</h2>
   <img
     src="../analysis/chart_absa_summary.png"
     style="width: 100%; border-radius: 10px"
     alt="ABSA grouped bar chart"
   />
   <div class="chart-caption">
-    Green = Positive mentions · Red = Negative mentions · 5 aspects across 10,000 reviews
+    10 aspects across 10,000 reviews. Salary &amp; Benefits and Work Environment dominate negative volume.
+  </div>
+</section>
+
+<!-- SLIDE: ABSA Trend Chart -->
+<section>
+  <h2>Aspect Negativity Trend - Last 36 Months</h2>
+  <div class="cols" style="align-items: center">
+    <div class="col-wide">
+      <img
+        src="../analysis/absa_time_trend.png"
+        style="width: 100%; border-radius: 10px"
+        alt="ABSA negative ratio trend by aspect"
+      />
+    </div>
+    <div class="col-narrow">
+      <div class="card">
+        <div class="card-title">Chart Takeaways</div>
+        <ul style="font-size: 0.58em; color: var(--c2); padding-left: 1.1em; margin: 0">
+          <li>Facilities &amp; Tools increased from 19.4% to 36.7% negative across the compared windows.</li>
+          <li>Work Environment also worsened, rising from 17.9% to 34.0% negative.</li>
+          <li>The latest monthly hotspot is Facilities &amp; Tools in 2026-04: 33.3% negative from 33 mentions.</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-top: 8px">
+        <div class="card-title">Interpretation</div>
+        <p style="font-size: 0.55em; color: var(--c2); margin: 0">
+          The trend is not just static dissatisfaction: recent reviews show rising operational friction around tools,
+          facilities, and work environment quality.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Segment Heatmaps -->
+<section>
+  <h2>Where the Negative Signals Concentrate</h2>
+  <div class="cols" style="align-items: flex-start">
+    <div>
+      <img
+        src="../analysis/absa_industry_heatmap.png"
+        style="width: 100%; border-radius: 10px"
+        alt="ABSA industry heatmap"
+      />
+      <div class="chart-caption">Industry groups: salary complaints concentrate in several service and labor-heavy sectors.</div>
+    </div>
+    <div>
+      <img
+        src="../analysis/absa_company_volume_heatmap.png"
+        style="width: 100%; border-radius: 10px"
+        alt="ABSA company volume heatmap"
+      />
+      <div class="chart-caption">Company volume: long-tail and mid-review companies show the strongest salary negativity.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Industry x Time Comparison -->
+<section>
+  <h2>Industry and Time Group Comparison</h2>
+  <div class="cols" style="align-items: flex-start">
+    <div>
+      <img
+        src="../analysis/absa_industry_aspect_comparison.png"
+        style="width: 100%; border-radius: 10px"
+        alt="Industry aspect comparison heatmap"
+      />
+      <div class="chart-caption">Major industries differ mainly on Salary &amp; Benefits and Work Environment.</div>
+    </div>
+    <div>
+      <img
+        src="../analysis/absa_time_group_comparison.png"
+        style="width: 100%; border-radius: 10px"
+        alt="Time group comparison line chart"
+      />
+      <div class="chart-caption">Salary negativity peaks in 2025, then drops in 2026 YTD.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE: Representative Companies by Industry -->
+<section>
+  <h2>Representative Companies - Aspect Hotspots</h2>
+  <p style="font-size: 0.58em; color: var(--c2); margin-bottom: 8px">
+    Representative companies are selected by review volume within major industries; pain aspect uses highest negative ratio with enough mentions.
+  </p>
+  <table style="font-size: 0.5em">
+    <thead>
+      <tr>
+        <th>Industry</th>
+        <th>Company</th>
+        <th class="center">Reviews</th>
+        <th>Main Pain Aspect</th>
+        <th class="center">Neg%</th>
+        <th>Positive Anchor</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>CNTT - Phần mềm</td>
+        <td>FPT Software</td>
+        <td class="center">442</td>
+        <td>Work-Life Balance</td>
+        <td class="center">23.1%</td>
+        <td>Work Environment</td>
+      </tr>
+      <tr>
+        <td>CNTT - Phần mềm</td>
+        <td>LGEDV</td>
+        <td class="center">141</td>
+        <td>Technology &amp; Product</td>
+        <td class="center">29.6%</td>
+        <td>Process &amp; Communication</td>
+      </tr>
+      <tr>
+        <td>Ngân hàng</td>
+        <td>Techcombank</td>
+        <td class="center">83</td>
+        <td>Salary &amp; Benefits</td>
+        <td class="center">8.8%</td>
+        <td>Work Environment</td>
+      </tr>
+      <tr>
+        <td>Thương mại điện tử</td>
+        <td>Japana</td>
+        <td class="center">37</td>
+        <td>Salary &amp; Benefits</td>
+        <td class="center">95.8%</td>
+        <td>Technology &amp; Product</td>
+      </tr>
+      <tr>
+        <td>Sản xuất</td>
+        <td>Future Media</td>
+        <td class="center">23</td>
+        <td>Salary &amp; Benefits</td>
+        <td class="center">96.7%</td>
+        <td>Work Environment</td>
+      </tr>
+      <tr>
+        <td>Truyền thông</td>
+        <td>DISION TECH</td>
+        <td class="center">82</td>
+        <td>Work-Life Balance</td>
+        <td class="center">66.7%</td>
+        <td>Process &amp; Communication</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="chart-caption">
+    Same aspect can mean different business action by industry: salary benchmarking for commerce/production, workload policy for media/IT.
   </div>
 </section>
 
@@ -140,42 +241,34 @@
   <h2>Key Findings</h2>
 
   <div class="finding danger fragment fade-up" data-fragment-index="1">
-    <div class="icon">🔴</div>
+    <div class="icon">1</div>
     <div class="body">
-      <strong>Work-Life Balance — 83% negative</strong> (81 pos vs 383 neg)
-      <p>Dominated by: overtime, áp lực, quá tải, stress, deadline. Employees are burning out.</p>
+      <strong>Salary &amp; Benefits is the main pain point</strong> (5,626 negative mentions, 60% negative)
+      <p>Salary is the only high-volume aspect where negative sentiment clearly exceeds positive sentiment.</p>
     </div>
   </div>
 
-  <div class="finding danger fragment fade-up" data-fragment-index="2" style="margin-top: 4px">
-    <div class="icon">🔴</div>
+  <div class="finding warn fragment fade-up" data-fragment-index="2" style="margin-top: 4px">
+    <div class="icon">2</div>
     <div class="body">
-      <strong>Career Growth — 80% negative</strong> (348 pos vs 1,423 neg)
-      <p>Limited promotion tracks, insufficient training budget. Strongest pain point by volume.</p>
+      <strong>Work Environment is polarizing</strong> (10,933 total mentions)
+      <p>It is the most praised aspect, but also the second largest complaint bucket; experience likely differs by team/company.</p>
     </div>
   </div>
 
   <div class="finding warn fragment fade-up" data-fragment-index="3" style="margin-top: 4px">
-    <div class="icon">🟡</div>
+    <div class="icon">3</div>
     <div class="body">
-      <strong>Work Environment — Most discussed</strong> (3,378 mentions · 54% negative)
-      <p>Both the most praised (1,568) and most complained about (1,810). Culture is polarizing — varies by team.</p>
+      <strong>Time comparison shows 2025 as the stress period</strong>
+      <p>Salary negativity reaches 74.1% in 2025, while Work Environment rises to 62.1%; both cool down in 2026 YTD.</p>
     </div>
   </div>
 
-  <div class="finding warn fragment fade-up" data-fragment-index="4" style="margin-top: 4px">
-    <div class="icon">🟡</div>
+  <div class="finding success fragment fade-up" data-fragment-index="4" style="margin-top: 4px">
+    <div class="icon">4</div>
     <div class="body">
-      <strong>Management — 60% negative</strong> (293 pos vs 434 neg)
-      <p>Keywords: thiếu tầm nhìn, không công bằng, micro-manage. Leadership quality inconsistent.</p>
-    </div>
-  </div>
-
-  <div class="finding success fragment fade-up" data-fragment-index="5" style="margin-top: 4px">
-    <div class="icon">🟢</div>
-    <div class="body">
-      <strong>Salary &amp; Benefits — Most balanced</strong> (1,617 pos vs 1,397 neg · 46% neg)
-      <p>Compensation is competitive but inconsistently applied. Mixed signal — benchmarking recommended.</p>
+      <strong>Representative companies make the insight actionable</strong>
+      <p>FPT points to work-life balance, LGEDV to technology/product, Techcombank to salary, and DISION TECH to workload pressure.</p>
     </div>
   </div>
 </section>

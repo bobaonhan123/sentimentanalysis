@@ -21,8 +21,7 @@ logger = logging.getLogger(__name__)
 
 _ROOT = Path(__file__).resolve().parents[2]
 DATA_CSV = _ROOT / "data_post_processing" / "1900_export_reviews.csv"
-LEGACY_ANALYSIS_CSV = _ROOT / "analysis" / "1900_export_reviews.csv"
-DEFAULT_CSV = DATA_CSV if DATA_CSV.exists() else LEGACY_ANALYSIS_CSV
+DEFAULT_CSV = DATA_CSV
 DEFAULT_OUT = _ROOT / "analysis"
 
 # ── Domain definition ────────────────────────────────────────────────────────

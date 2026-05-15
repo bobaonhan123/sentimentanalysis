@@ -25,6 +25,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import FeatureUnion
 from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
@@ -207,6 +208,33 @@ def _get_text_models():
             ("clf", CalibratedClassifierCV(
                 LinearSVC(max_iter=3000, class_weight="balanced", random_state=42, C=0.8),
                 cv=3,
+            )),
+        ]),
+        "TFIDF_WordChar_LogisticRegression": Pipeline([
+            ("features", FeatureUnion([
+                ("word", TfidfVectorizer(
+                    analyzer="word",
+                    ngram_range=(1, 2),
+                    min_df=2,
+                    max_df=0.95,
+                    max_features=70000,
+                    sublinear_tf=True,
+                )),
+                ("char", TfidfVectorizer(
+                    analyzer="char_wb",
+                    ngram_range=(3, 5),
+                    min_df=2,
+                    max_df=0.95,
+                    max_features=70000,
+                    sublinear_tf=True,
+                )),
+            ])),
+            ("clf", LogisticRegression(
+                max_iter=1800,
+                class_weight="balanced",
+                random_state=42,
+                C=2.0,
+                solver="lbfgs",
             )),
         ]),
     }
