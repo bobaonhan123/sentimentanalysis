@@ -836,6 +836,9 @@ def predict(texts: list[str]) -> list[dict]:
             meta = None
 
     if meta and meta.get("backend") == "tensorflow_keras_lstm":
+        label_names = {
+            int(k): v for k, v in (meta.get("label_names") or LABEL_NAMES).items()
+        } if isinstance(meta.get("label_names"), dict) else LABEL_NAMES
         try:
             import tensorflow as tf
             from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -856,7 +859,7 @@ def predict(texts: list[str]) -> list[dict]:
             results.append({
                 "text": text[:100],
                 "sentiment": pred,
-                "sentiment_name": LABEL_NAMES[pred],
+                "sentiment_name": label_names.get(pred, str(pred)),
                 "confidence": round(float(proba[pred]), 4),
             })
         return results
@@ -866,6 +869,9 @@ def predict(texts: list[str]) -> list[dict]:
 
     ml_model = joblib.load(model_path)
     input_type = (meta or {}).get("input_type", "features")
+    label_names = LABEL_NAMES
+    if meta and isinstance(meta.get("label_names"), dict):
+        label_names = {int(k): v for k, v in meta["label_names"].items()}
     scaler = joblib.load(scaler_path) if scaler_path.exists() and input_type == "features" else None
     ft_model = _ensure_fasttext_model() if input_type == "features" else None
 
@@ -909,6 +915,6 @@ def predict(texts: list[str]) -> list[dict]:
         results.append({
             "text": text[:100],
             "sentiment": int(pred),
-            "sentiment_name": LABEL_NAMES[pred],
+            "sentiment_name": label_names.get(int(pred), str(pred)),
         })
     return results

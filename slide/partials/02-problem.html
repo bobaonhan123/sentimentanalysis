@@ -1,48 +1,88 @@
 <!-- SLIDE: Section 01 Header -->
 <section class="section-title">
   <div class="section-badge">01</div>
-  <h2>Problem Statement<br />&amp; Dataset</h2>
-  <p style="font-size: 0.8em">
-    Why this problem · Data collection · Dataset overview
-  </p>
+  <h2>Context &amp; Problem</h2>
+  <p style="font-size:0.78em">From employee reviews to decision-ready HR signals</p>
 </section>
 
-<!-- SLIDE: Motivation -->
+<!-- SLIDE: Context / Urgency -->
 <section>
-  <h2>Why Sentiment Analysis on Reviews?</h2>
-  <div class="grid-2x2" style="margin-top: 16px">
-    <div class="card">
-      <div class="card-title">The Gap</div>
-      <p>
-        A 4★ rating may still hide serious complaints about salary or career growth.
-        <strong>Star ratings alone are insufficient</strong> to guide HR decisions.
+  <h2>Why Employee Review Analytics Matters</h2>
+  <div class="cols equal-cards" style="margin-top:16px">
+    <div class="metric-box" style="padding:20px">
+      <div class="val">21%</div>
+      <div class="lbl">Global employees engaged at work</div>
+    </div>
+    <div class="metric-box" style="padding:20px">
+      <div class="val">$438B</div>
+      <div class="lbl">Estimated productivity loss from engagement decline</div>
+    </div>
+    <div class="metric-box" style="padding:20px">
+      <div class="val">13%</div>
+      <div class="lbl">Projected HR analytics market CAGR</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <p style="font-size:0.62em; color:var(--c2); margin:0; text-align:center">
+      Companies need faster ways to detect workforce problems from public feedback, not only from periodic surveys.
+    </p>
+  </div>
+  <div class="chart-caption">Sources: Gallup State of the Global Workplace; Grand View Research HR Analytics Market Report.</div>
+</section>
+
+<!-- SLIDE: Job - Pain - Gain -->
+<section>
+  <h2>Job - Pain - Gain</h2>
+  <div class="cols equal-cards" style="margin-top:16px">
+    <div class="card" style="border-top:4px solid var(--c3)">
+      <div class="card-title">Job</div>
+      <p style="font-size:0.62em; margin:0">
+        HR and managers need to understand what employees complain about, where it happens, and how urgent it is.
       </p>
     </div>
-    <div class="card">
-      <div class="card-title">Vietnamese NLP Challenge</div>
-      <p>
-        Standard tools (VADER, TextBlob) are English-only. Vietnamese has
-        <strong>limited labeled corpora</strong> and requires dedicated word segmentation.
+    <div class="card" style="border-top:4px solid var(--c-neg)">
+      <div class="card-title">Pain</div>
+      <p style="font-size:0.62em; margin:0">
+        Reviews are unstructured, Vietnamese text is noisy, and star ratings hide mixed opinions.
       </p>
     </div>
-    <div class="card">
-      <div class="card-title">Business Motivation</div>
-      <p>
-        Banks &amp; fintech competing for talent need
-        <strong>aspect-level insights</strong> — not aggregated scores — to act on specific pain points.
+    <div class="card" style="border-top:4px solid var(--c-pos)">
+      <div class="card-title">Gain</div>
+      <p style="font-size:0.62em; margin:0">
+        The dashboard turns raw reviews into sentiment trends, critical aspects, and action priorities.
       </p>
     </div>
-    <div class="card">
-      <div class="card-title">Research Objectives</div>
-      <ol style="font-size: 0.8em; margin: 0; padding-left: 1.2em; color: var(--c2)">
-        <li style="margin-bottom: 10px">
-          Build a 3-class sentiment classifier for Vietnamese workplace reviews
-        </li>
-        <li style="margin-bottom: 10px">
-          Apply ABSA to identify which aspects drive satisfaction
-        </li>
-        <li>Design a complete pipeline — crawl → label → train → visualize</li>
-      </ol>
+  </div>
+  <div class="card" style="margin-top:14px; text-align:center">
+    <p style="font-size:0.66em; color:var(--c1); margin:0; font-weight:700">
+      Reviews go in -> HR priorities come out.
+    </p>
+  </div>
+</section>
+
+<!-- SLIDE: Project Goals -->
+<section>
+  <h2>Project Goals</h2>
+  <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px">
+    <div class="pipeline-step" style="padding:13px 18px">
+      <div class="num">1</div>
+      <div class="op" style="min-width:180px">Build the data pipeline</div>
+      <div class="why">Collect, clean, and structure Vietnamese workplace reviews.</div>
+    </div>
+    <div class="pipeline-step" style="padding:13px 18px">
+      <div class="num">2</div>
+      <div class="op" style="min-width:180px">Train sentiment models</div>
+      <div class="why">Compare ML, embedding-based, and deep learning models under noisy labels.</div>
+    </div>
+    <div class="pipeline-step" style="padding:13px 18px">
+      <div class="num">3</div>
+      <div class="op" style="min-width:180px">Extract business insights</div>
+      <div class="why">Identify critical issues by aspect, industry, company group, and time.</div>
+    </div>
+    <div class="pipeline-step" style="padding:13px 18px">
+      <div class="num">4</div>
+      <div class="op" style="min-width:180px">Deliver a dashboard</div>
+      <div class="why">Make the trained model and ABSA analysis usable for non-technical users.</div>
     </div>
   </div>
 </section>

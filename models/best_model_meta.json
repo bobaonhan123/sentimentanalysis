@@ -1,7 +1,11 @@
 {
-  "name": "MLP_NeuralNet_Tuned",
-  "backend": "sklearn_fasttext",
-  "input_type": "features",
+  "name": "binary_no_neutral__TFIDF_WordChar_LinearSVC",
+  "backend": "sklearn_text",
+  "input_type": "text_clean",
   "model_path": "D:\\Project\\business analysis\\sentimentanalysis\\models\\best_model.pkl",
-  "scaler_path": "D:\\Project\\business analysis\\sentimentanalysis\\models\\scaler.pkl"
+  "label_names": {
+    "0": "negative",
+    "2": "positive"
+  },
+  "trained_by": "variant_trainer"
 }

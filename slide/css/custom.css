@@ -115,11 +115,19 @@
 .cols {
 	display: flex;
 	gap: 14px;
-	align-items: flex-start;
+	align-items: stretch;
 }
 .cols > * {
 	flex: 1;
 	min-width: 0;
+}
+.cols > .card {
+	align-self: stretch;
+}
+.equal-cards > .card,
+.equal-cards > div > .card {
+	height: 100%;
+	box-sizing: border-box;
 }
 .cols .col-wide {
 	flex: 1.5;

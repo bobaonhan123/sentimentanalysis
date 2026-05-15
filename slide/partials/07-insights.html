@@ -2,115 +2,65 @@
 <section class="section-title">
   <div class="section-badge">04</div>
   <h2>Business Insights</h2>
-  <p style="font-size: 0.78em">ABSA - 10 workplace aspects - time trend - segment hotspots</p>
-</section>
-
-<!-- SLIDE: ABSA Method -->
-<section>
-  <h2>Aspect-Based Sentiment Analysis (ABSA)</h2>
-  <p style="font-size: 0.55em; color: var(--c2); margin-bottom: 8px">
-    Rule-based keyword matching + lexicon opinion extraction in
-    <code class="inline">src/analysis/absa.py</code>. Current source:
-    <code class="inline">data_post_processing/1900_export_reviews.csv</code>.
-  </p>
-  <div class="cols">
-    <div>
-      <div class="card">
-        <div class="card-title">10 Aspect Taxonomy</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.5em; color: var(--c2)">
-          <div>Salary &amp; Benefits</div>
-          <div>Work Environment</div>
-          <div>Career Growth</div>
-          <div>Management &amp; Leadership</div>
-          <div>Work-Life Balance</div>
-          <div>Facilities &amp; Tools</div>
-          <div>Job Security &amp; Stability</div>
-          <div>Process &amp; Communication</div>
-          <div>Technology &amp; Product</div>
-          <div>Recruitment &amp; Onboarding</div>
-        </div>
-      </div>
-      <div class="card" style="margin-top: 8px">
-        <div class="card-title">Pipeline</div>
-        <ol style="font-size: 0.52em; color: var(--c2); padding-left: 1.2em; margin: 0">
-          <li>Split pros, cons, and advice into sentence fragments</li>
-          <li>Detect aspect keywords; one sentence can map to multiple aspects</li>
-          <li>Search a +/-6 token window for opinion terms</li>
-          <li>Fallback uses rating/source only when no local opinion word is found</li>
-        </ol>
-      </div>
-    </div>
-    <div>
-      <div class="card">
-        <div class="card-title">Current ABSA Output</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align:center">
-          <div>
-            <div style="font-size: 1.3em; font-weight: 800; color: var(--accent)">10,000</div>
-            <div style="font-size: 0.52em; color: var(--c2)">reviews</div>
-          </div>
-          <div>
-            <div style="font-size: 1.3em; font-weight: 800; color: var(--accent)">32,789</div>
-            <div style="font-size: 0.52em; color: var(--c2)">aspect mentions</div>
-          </div>
-          <div>
-            <div style="font-size: 1.1em; font-weight: 800; color: var(--c-neg)">5,626</div>
-            <div style="font-size: 0.52em; color: var(--c2)">salary complaints</div>
-          </div>
-          <div>
-            <div style="font-size: 1.1em; font-weight: 800; color: var(--c-pos)">5,773</div>
-            <div style="font-size: 0.52em; color: var(--c2)">work-env praise</div>
-          </div>
-        </div>
-      </div>
-      <div class="card" style="margin-top: 8px">
-        <div class="card-title">Reading the Chart</div>
-        <p style="font-size: 0.55em; color: var(--c2); margin: 0">
-          Work Environment has the highest discussion volume, while Salary &amp; Benefits is the clearest negative outlier:
-          60% of its mentions are negative, far above Career Growth and Management at roughly 16-17%.
-        </p>
-      </div>
-    </div>
-  </div>
+  <p style="font-size:0.78em">From sentiment output to HR priorities</p>
 </section>
 
 <!-- SLIDE: ABSA Overview Chart -->
 <section>
-  <h2>ABSA - Aspect Sentiment Distribution</h2>
+  <h2>Aspect Sentiment Overview</h2>
   <img
     src="analysis/chart_absa_summary.png"
-    style="width: 100%; border-radius: 10px"
-    alt="ABSA grouped bar chart"
+    style="width:100%; max-height:560px; object-fit:contain; border-radius:10px"
+    alt="ABSA aspect sentiment chart"
   />
   <div class="chart-caption">
-    10 aspects across 10,000 reviews. Salary &amp; Benefits and Work Environment dominate negative volume.
+    Salary &amp; Benefits is the clearest negative outlier; Work Environment has the largest discussion volume.
   </div>
 </section>
 
-<!-- SLIDE: ABSA Trend Chart -->
+<!-- SLIDE: Critical Issue Priority -->
 <section>
-  <h2>Aspect Negativity Trend - Last 36 Months</h2>
-  <div class="cols" style="align-items: center">
+  <h2>Critical Issues by Business Priority</h2>
+  <div class="cols equal-cards">
+    <div class="card" style="border-top:4px solid var(--c-neg)">
+      <div class="card-title">P1 - Salary &amp; Benefits</div>
+      <div style="font-size:1.45em; font-weight:800; color:var(--c-neg)">5,626</div>
+      <p style="font-size:0.55em; margin:0">negative mentions · 60% negative ratio</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--c-neg)">
+      <div class="card-title">P1 - Work Environment</div>
+      <div style="font-size:1.45em; font-weight:800; color:var(--c-neg)">5,087</div>
+      <p style="font-size:0.55em; margin:0">negative mentions · 47% negative ratio</p>
+    </div>
+    <div class="card" style="border-top:4px solid var(--c-neu)">
+      <div class="card-title">P2 - Facilities &amp; Tools</div>
+      <div style="font-size:1.45em; font-weight:800; color:var(--c-neu)">+17.4pp</div>
+      <p style="font-size:0.55em; margin:0">largest negative-ratio increase</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px; text-align:center">
+    <p style="font-size:0.62em; margin:0">
+      Priority is based on negative volume, negative ratio, trend movement, and actionability.
+    </p>
+  </div>
+</section>
+
+<!-- SLIDE: Trend Chart -->
+<section>
+  <h2>Which Issues Are Getting Worse?</h2>
+  <div class="cols" style="align-items:center">
     <div class="col-wide">
       <img
         src="analysis/absa_time_trend.png"
-        style="width: 100%; border-radius: 10px"
-        alt="ABSA negative ratio trend by aspect"
+        style="width:100%; max-height:520px; object-fit:contain; border-radius:10px"
+        alt="ABSA negative trend chart"
       />
     </div>
     <div class="col-narrow">
       <div class="card">
-        <div class="card-title">Chart Takeaways</div>
-        <ul style="font-size: 0.58em; color: var(--c2); padding-left: 1.1em; margin: 0">
-          <li>Facilities &amp; Tools increased from 19.4% to 36.7% negative across the compared windows.</li>
-          <li>Work Environment also worsened, rising from 17.9% to 34.0% negative.</li>
-          <li>The latest monthly hotspot is Facilities &amp; Tools in 2026-04: 33.3% negative from 33 mentions.</li>
-        </ul>
-      </div>
-      <div class="card" style="margin-top: 8px">
-        <div class="card-title">Interpretation</div>
-        <p style="font-size: 0.55em; color: var(--c2); margin: 0">
-          The trend is not just static dissatisfaction: recent reviews show rising operational friction around tools,
-          facilities, and work environment quality.
+        <div class="card-title">Watchlist</div>
+        <p style="font-size:0.55em; margin:0">
+          Facilities &amp; Tools, Work Environment, and Work-Life Balance show the clearest upward movement in negativity.
         </p>
       </div>
     </div>
@@ -119,156 +69,73 @@
 
 <!-- SLIDE: Segment Heatmaps -->
 <section>
-  <h2>Where the Negative Signals Concentrate</h2>
-  <div class="cols" style="align-items: flex-start">
+  <h2>Where Negative Signals Concentrate</h2>
+  <div class="cols" style="align-items:flex-start">
     <div>
       <img
         src="analysis/absa_industry_heatmap.png"
-        style="width: 100%; border-radius: 10px"
-        alt="ABSA industry heatmap"
+        style="width:100%; max-height:500px; object-fit:contain; border-radius:10px"
+        alt="Industry aspect heatmap"
       />
-      <div class="chart-caption">Industry groups: salary complaints concentrate in several service and labor-heavy sectors.</div>
+      <div class="chart-caption">Industry view</div>
     </div>
     <div>
       <img
         src="analysis/absa_company_volume_heatmap.png"
-        style="width: 100%; border-radius: 10px"
-        alt="ABSA company volume heatmap"
+        style="width:100%; max-height:500px; object-fit:contain; border-radius:10px"
+        alt="Company volume heatmap"
       />
-      <div class="chart-caption">Company volume: long-tail and mid-review companies show the strongest salary negativity.</div>
+      <div class="chart-caption">Company-volume view</div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE: Industry x Time Comparison -->
+<!-- SLIDE: Keyword Drivers -->
 <section>
-  <h2>Industry and Time Group Comparison</h2>
-  <div class="cols" style="align-items: flex-start">
-    <div>
-      <img
-        src="analysis/absa_industry_aspect_comparison.png"
-        style="width: 100%; border-radius: 10px"
-        alt="Industry aspect comparison heatmap"
-      />
-      <div class="chart-caption">Major industries differ mainly on Salary &amp; Benefits and Work Environment.</div>
-    </div>
-    <div>
-      <img
-        src="analysis/absa_time_group_comparison.png"
-        style="width: 100%; border-radius: 10px"
-        alt="Time group comparison line chart"
-      />
-      <div class="chart-caption">Salary negativity peaks in 2025, then drops in 2026 YTD.</div>
-    </div>
-  </div>
-</section>
-
-<!-- SLIDE: Representative Companies by Industry -->
-<section>
-  <h2>Representative Companies - Aspect Hotspots</h2>
-  <p style="font-size: 0.58em; color: var(--c2); margin-bottom: 8px">
-    Representative companies are selected by review volume within major industries; pain aspect uses highest negative ratio with enough mentions.
-  </p>
-  <table style="font-size: 0.5em">
-    <thead>
-      <tr>
-        <th>Industry</th>
-        <th>Company</th>
-        <th class="center">Reviews</th>
-        <th>Main Pain Aspect</th>
-        <th class="center">Neg%</th>
-        <th>Positive Anchor</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>CNTT - Phần mềm</td>
-        <td>FPT Software</td>
-        <td class="center">442</td>
-        <td>Work-Life Balance</td>
-        <td class="center">23.1%</td>
-        <td>Work Environment</td>
-      </tr>
-      <tr>
-        <td>CNTT - Phần mềm</td>
-        <td>LGEDV</td>
-        <td class="center">141</td>
-        <td>Technology &amp; Product</td>
-        <td class="center">29.6%</td>
-        <td>Process &amp; Communication</td>
-      </tr>
-      <tr>
-        <td>Ngân hàng</td>
-        <td>Techcombank</td>
-        <td class="center">83</td>
-        <td>Salary &amp; Benefits</td>
-        <td class="center">8.8%</td>
-        <td>Work Environment</td>
-      </tr>
-      <tr>
-        <td>Thương mại điện tử</td>
-        <td>Japana</td>
-        <td class="center">37</td>
-        <td>Salary &amp; Benefits</td>
-        <td class="center">95.8%</td>
-        <td>Technology &amp; Product</td>
-      </tr>
-      <tr>
-        <td>Sản xuất</td>
-        <td>Future Media</td>
-        <td class="center">23</td>
-        <td>Salary &amp; Benefits</td>
-        <td class="center">96.7%</td>
-        <td>Work Environment</td>
-      </tr>
-      <tr>
-        <td>Truyền thông</td>
-        <td>DISION TECH</td>
-        <td class="center">82</td>
-        <td>Work-Life Balance</td>
-        <td class="center">66.7%</td>
-        <td>Process &amp; Communication</td>
-      </tr>
-    </tbody>
-  </table>
+  <h2>What Words Drive the Pain Points?</h2>
+  <img
+    src="analysis/absa_keyword_bar.png"
+    style="width:100%; max-height:560px; object-fit:contain; border-radius:10px"
+    alt="ABSA keyword bar chart"
+  />
   <div class="chart-caption">
-    Same aspect can mean different business action by industry: salary benchmarking for commerce/production, workload policy for media/IT.
+    Keyword-level drivers make the dashboard easier to translate into HR actions.
   </div>
 </section>
 
 <!-- SLIDE: Key Findings -->
 <section>
-  <h2>Key Findings</h2>
+  <h2>Key Business Findings</h2>
 
   <div class="finding danger fragment fade-up" data-fragment-index="1">
     <div class="icon">1</div>
     <div class="body">
-      <strong>Salary &amp; Benefits is the main pain point</strong> (5,626 negative mentions, 60% negative)
-      <p>Salary is the only high-volume aspect where negative sentiment clearly exceeds positive sentiment.</p>
+      <strong>Salary &amp; Benefits is the main pain point</strong>
+      <p>It is the only high-volume aspect where negative sentiment clearly dominates.</p>
     </div>
   </div>
 
-  <div class="finding warn fragment fade-up" data-fragment-index="2" style="margin-top: 4px">
+  <div class="finding warn fragment fade-up" data-fragment-index="2" style="margin-top:4px">
     <div class="icon">2</div>
     <div class="body">
-      <strong>Work Environment is polarizing</strong> (10,933 total mentions)
-      <p>It is the most praised aspect, but also the second largest complaint bucket; experience likely differs by team/company.</p>
+      <strong>Work Environment is polarizing</strong>
+      <p>It has the highest total discussion volume and the second largest complaint bucket.</p>
     </div>
   </div>
 
-  <div class="finding warn fragment fade-up" data-fragment-index="3" style="margin-top: 4px">
+  <div class="finding warn fragment fade-up" data-fragment-index="3" style="margin-top:4px">
     <div class="icon">3</div>
     <div class="body">
-      <strong>Time comparison shows 2025 as the stress period</strong>
-      <p>Salary negativity reaches 74.1% in 2025, while Work Environment rises to 62.1%; both cool down in 2026 YTD.</p>
+      <strong>Facilities &amp; Tools is an emerging risk</strong>
+      <p>The negative ratio is not the highest overall, but it is worsening quickly.</p>
     </div>
   </div>
 
-  <div class="finding success fragment fade-up" data-fragment-index="4" style="margin-top: 4px">
+  <div class="finding success fragment fade-up" data-fragment-index="4" style="margin-top:4px">
     <div class="icon">4</div>
     <div class="body">
-      <strong>Representative companies make the insight actionable</strong>
-      <p>FPT points to work-life balance, LGEDV to technology/product, Techcombank to salary, and DISION TECH to workload pressure.</p>
+      <strong>The dashboard supports prioritization</strong>
+      <p>HR can move from raw reviews to aspect priorities, segments, and follow-up actions.</p>
     </div>
   </div>
 </section>

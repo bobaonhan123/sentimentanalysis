@@ -1,55 +1,45 @@
-<!-- SLIDE: HR Roadmap -->
+<!-- SLIDE: Practical Value -->
 <section>
-  <h2>HR Priority Roadmap</h2>
-  <p style="font-size: 0.75em; color: var(--c2); margin-bottom: 16px">
-    Derived from 10k ABSA negative ratios, mention volumes, and time-trend movement
-  </p>
-  <table>
-    <thead>
-      <tr><th>Priority</th><th>Area</th><th>Recommended Action</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><span class="badge badge-red">High</span></td>
-        <td>Salary &amp; Benefits</td>
-        <td>Benchmark pay bands; explain compensation logic; track delayed raises</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-red">High</span></td>
-        <td>Work Environment</td>
-        <td>Run team-level culture checks; isolate companies/teams with high negative ratios</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-yellow">Medium</span></td>
-        <td>Facilities &amp; Tools</td>
-        <td>Investigate recent 2026 complaints about equipment, office setup, and tooling</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-yellow">Medium</span></td>
-        <td>Work-Life Balance</td>
-        <td>Monitor workload and overtime because negativity is rising over time</td>
-      </tr>
-      <tr>
-        <td><span class="badge badge-green">Monitor</span></td>
-        <td>Career Growth / Management</td>
-        <td>Maintain training and leadership programs; both are healthier in the 10k view</td>
-      </tr>
-    </tbody>
-  </table>
+  <h2>Practical Value of the Topic</h2>
+  <div class="cols" style="align-items:stretch; margin-top:16px">
+    <div class="card">
+      <div class="card-title">For Business Analysis</div>
+      <p style="font-size:0.6em; margin:0">
+        Converts unstructured employee reviews into measurable sentiment, aspect distribution, and time trends.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-title">For Market Listening</div>
+      <p style="font-size:0.6em; margin:0">
+        Helps compare companies and industries by public employee feedback without reading thousands of reviews.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-title">For Decision Support</div>
+      <p style="font-size:0.6em; margin:0">
+        Highlights critical topics such as salary, work environment, workload, and facilities as early warning signals.
+      </p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px; text-align:center">
+    <p style="font-size:0.64em; color:var(--c1); margin:0; font-weight:700">
+      The topic is valuable because it turns scattered opinions into structured business signals.
+    </p>
+  </div>
 </section>
 
 <!-- SLIDE: Architecture -->
 <section>
-  <h2>End-to-End System Architecture</h2>
-  <div class="arch-row" style="margin: 20px 0">
+  <h2>End-to-End Project Flow</h2>
+  <div class="arch-row" style="margin: 18px 0">
     <div class="arch-box">
-      <div class="ico">A</div>
-      <div class="lbl">Airflow<br />(Daily 02:00)</div>
+      <div class="ico">CLI</div>
+      <div class="lbl">Run Script<br />Manual Batch</div>
     </div>
     <div class="arch-arrow">-></div>
     <div class="arch-box">
       <div class="ico">S</div>
-      <div class="lbl">Scraper<br />+ Bloom Filter</div>
+      <div class="lbl">Scraper<br />Bloom Filter</div>
     </div>
     <div class="arch-arrow">-></div>
     <div class="arch-box">
@@ -58,25 +48,24 @@
     </div>
     <div class="arch-arrow">-></div>
     <div class="arch-box">
-      <div class="ico">N</div>
-      <div class="lbl">NLP<br />Preprocessor</div>
+      <div class="ico">DB</div>
+      <div class="lbl">PostgreSQL<br />Storage</div>
+    </div>
+  </div>
+  <div class="arch-row">
+    <div class="arch-box">
+      <div class="ico">NLP</div>
+      <div class="lbl">Preprocess<br />Vietnamese Text</div>
     </div>
     <div class="arch-arrow">-></div>
     <div class="arch-box">
-      <div class="ico">DB</div>
-      <div class="lbl">PostgreSQL<br />ORM</div>
-    </div>
-  </div>
-  <div style="text-align: center; font-size: 1.2em; margin: 4px 0">down</div>
-  <div class="arch-row">
-    <div class="arch-box">
       <div class="ico">ML</div>
-      <div class="lbl">FastText 300-dim<br />+ MLP Classifier</div>
+      <div class="lbl">Sentiment<br />Models</div>
     </div>
     <div class="arch-arrow">+</div>
     <div class="arch-box">
       <div class="ico">ABSA</div>
-      <div class="lbl">10-aspect<br />Rule Engine</div>
+      <div class="lbl">Aspect<br />Analytics</div>
     </div>
     <div class="arch-arrow">-></div>
     <div class="arch-box">
@@ -84,26 +73,24 @@
       <div class="lbl">Streamlit<br />Dashboard</div>
     </div>
   </div>
-  <div class="card" style="margin-top: 14px; font-size: 0.75em; text-align: center">
-    Run dashboard: <code class="inline">streamlit run analysis/dashboard.py --server.port 8502</code>
+  <div class="card" style="margin-top: 14px; font-size: 0.68em; text-align: center">
+    The website is a proof-of-concept that turns trained models into a usable business sentiment analysis tool.
   </div>
 </section>
 
 <!-- SLIDE: Conclusion -->
 <section>
   <h2>Summary</h2>
-  <div class="cols">
+  <div class="cols equal-cards">
     <div>
       <div class="card">
         <div class="card-title">What We Built</div>
-        <ul style="font-size: 0.65em; color: var(--c2); padding-left: 1.2em; margin: 0.4em 0 0">
-          <li style="margin-bottom:4px">Self-collected <strong style="color:var(--c1)">10,000-review</strong> Vietnamese dataset</li>
-          <li style="margin-bottom:4px">8-step NLP preprocessing for Vietnamese text</li>
-          <li style="margin-bottom:4px">Weak supervision labeling from noisy star ratings</li>
-          <li style="margin-bottom:4px">FastText + handcrafted <strong style="color:var(--c1)">305-dim</strong> feature vector</li>
-          <li style="margin-bottom:4px">Expanded model comparison - tuned MLP reaches <strong style="color:var(--c3)">79.7%</strong> accuracy</li>
-          <li style="margin-bottom:4px">ABSA over 10 workplace aspects (32,789 mentions)</li>
-          <li>Streamlit dashboard for HR analytics</li>
+        <ul style="font-size: 0.62em; color: var(--c2); padding-left: 1.2em; margin: 0.4em 0 0">
+          <li>Self-collected 10,000-review Vietnamese workplace dataset</li>
+          <li>End-to-end crawl, preprocess, label, train, analyze, and dashboard pipeline</li>
+          <li>Label quality audit using confident learning</li>
+          <li>Multiple neutral-handling strategies tested empirically</li>
+          <li>ABSA over 10 workplace aspects with 32,789 mentions</li>
         </ul>
       </div>
     </div>
@@ -111,28 +98,39 @@
       <div class="card">
         <div class="card-title">Key Results</div>
         <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 0.4em">
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:#eff6ff; border-radius:6px; font-size:0.63em">
-            <span style="color:var(--c2)">Best model accuracy</span>
-            <span style="font-weight:800; color:var(--c3); font-size:1.15em">79.7%</span>
+          <div style="display:flex; justify-content:space-between; padding:5px 8px; background:#eff6ff; border-radius:6px; font-size:0.63em">
+            <span style="color:var(--c2)">Binary polarity F1</span>
+            <span style="font-weight:800; color:var(--c3)">0.918</span>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:#f8fafc; border-radius:6px; font-size:0.63em">
-            <span style="color:var(--c2)">F1 Macro</span>
-            <span style="font-weight:700; color:var(--c1)">0.728</span>
+          <div style="display:flex; justify-content:space-between; padding:5px 8px; background:#f8fafc; border-radius:6px; font-size:0.63em">
+            <span style="color:var(--c2)">Cleaned 3-class F1</span>
+            <span style="font-weight:700; color:var(--c1)">0.877</span>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:#f8fafc; border-radius:6px; font-size:0.63em">
-            <span style="color:var(--c2)">Hardest class (Neutral)</span>
-            <span style="font-weight:700; color:var(--c-neu)">F1 = 0.509</span>
+          <div style="display:flex; justify-content:space-between; padding:5px 8px; background:#f8fafc; border-radius:6px; font-size:0.63em">
+            <span style="color:var(--c2)">Likely label issues</span>
+            <span style="font-weight:700; color:var(--c-neu)">1,570</span>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:#f8fafc; border-radius:6px; font-size:0.63em">
-            <span style="color:var(--c2)">ABSA mentions</span>
-            <span style="font-weight:700; color:var(--c1)">32,789</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 8px; background:#fff5f5; border-radius:6px; font-size:0.63em">
+          <div style="display:flex; justify-content:space-between; padding:5px 8px; background:#fff5f5; border-radius:6px; font-size:0.63em">
             <span style="color:var(--c2)">Biggest pain point</span>
             <span style="font-weight:700; color:var(--c-neg)">Salary 60% negative</span>
           </div>
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- SLIDE: References -->
+<section>
+  <h2>Selected References</h2>
+  <div class="card">
+    <ul style="font-size: 0.46em; color: var(--c2); line-height: 1.35; padding-left: 1.2em; margin: 0">
+      <li>Gallup. (2024). <em>State of the global workplace: 2024 report</em>. Gallup.</li>
+      <li>Grand View Research. (2025). <em>HR analytics market size, share &amp; trends analysis report, 2026-2033</em>.</li>
+      <li>Nakov, P., Kozareva, Z., Ritter, A., Rosenthal, S., Stoyanov, V., &amp; Wilson, T. (2013). SemEval-2013 Task 2: Sentiment analysis in Twitter. <em>SemEval 2013</em>, 312-320.</li>
+      <li>Northcutt, C. G., Jiang, L., &amp; Chuang, I. L. (2021). Confident learning: Estimating uncertainty in dataset labels. <em>Journal of Artificial Intelligence Research, 70</em>, 1373-1411.</li>
+      <li>Ribeiro, F. N., Araujo, M., Goncalves, P., Goncalves, M. A., &amp; Benevenuto, F. (2016). SentiBench: A benchmark comparison of state-of-the-practice sentiment analysis methods. <em>EPJ Data Science, 5</em>(1).</li>
+      <li>Smieja, M., Tabor, J., &amp; Spurek, P. (2019). SVM with a neutral class. <em>Pattern Analysis and Applications, 22</em>, 573-582.</li>
+    </ul>
   </div>
 </section>

@@ -31,6 +31,9 @@ def main():
     train_p.add_argument("--force", action="store_true", help="Force retrain even if data unchanged")
     train_p.add_argument("--csv", default=None, help="Path to reviews CSV (default: data_post_processing/1900_export_reviews.csv)")
 
+    train_variants_p = sub.add_parser("train-variants", help="Train label-quality/binary/mixed sentiment variants")
+    train_variants_p.add_argument("--csv", default=None, help="Path to reviews CSV (default: data_post_processing/1900_export_reviews.csv)")
+
     # init-db
     sub.add_parser("init-db", help="Create/update database tables")
 
@@ -63,6 +66,16 @@ def main():
             print(f"Training skipped: {result.get('reason')}")
         else:
             print(f"Training failed: {result.get('reason', 'unknown')}")
+
+    elif args.command == "train-variants":
+        from src.training.variant_trainer import train_variants
+        result = train_variants(csv_path=args.csv)
+        status = result.get("status", "unknown")
+        if status == "success":
+            best = result.get("best_model", {})
+            print(f"Variant training complete. Best model: {best['name']} (F1={best['f1_macro']}, Acc={best['accuracy']})")
+        else:
+            print(f"Variant training failed: {result.get('reason', 'unknown')}")
 
     elif args.command == "absa":
         from src.analysis.absa import run_absa
