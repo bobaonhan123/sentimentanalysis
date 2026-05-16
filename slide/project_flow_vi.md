@@ -2,7 +2,7 @@
 
 ## 1. Dinh vi de tai
 
-De tai nen duoc trinh bay la **Employee Review Intelligence Dashboard** thay vi chi la mot bai sentiment classification. Ly do la output cuoi cung khong chi tra ve positive/negative/neutral, ma giup HR va management tra loi cac cau hoi:
+De tai nen duoc trinh bay la **Sentiment Analysis System for Employee Reviews** thay vi chi la mot bai sentiment classification. Ly do la output cuoi cung khong chi tra ve positive/negative/neutral, ma giup HR va management tra loi cac cau hoi:
 
 - Nhan vien dang phan nan nhieu nhat ve van de gi?
 - Van de nao dang xau di theo thoi gian?

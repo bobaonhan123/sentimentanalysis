@@ -1,4 +1,4 @@
-<!-- SLIDE: Dataset Collection -->
+﻿<!-- SLIDE: Dataset Collection -->
 <section>
   <h2>Dataset - Self-Collected from 1900.com.vn</h2>
   <div class="cols" style="align-items:stretch; margin-top:14px">
@@ -55,8 +55,8 @@
 <section>
   <h2>Dataset Snapshot</h2>
   <div class="cols" style="align-items:center">
-    <div>
-      <table>
+    <div style="flex:0.9">
+      <table style="font-size:0.48em">
         <thead><tr><th>Field Group</th><th>Examples</th></tr></thead>
         <tbody>
           <tr><td>Review content</td><td><code class="inline">pros</code>, <code class="inline">cons</code>, <code class="inline">advice</code></td></tr>
@@ -67,17 +67,17 @@
       </table>
       <div class="card" style="margin-top:10px">
         <p style="font-size:0.58em; margin:0">
-          The label distribution is imbalanced, so Macro F1 is more informative than accuracy alone.
+          Weak labeling adjusts the rating-only signal with keyword and ABSA evidence before model training.
         </p>
       </div>
     </div>
-    <div>
+    <div style="flex:1.15">
       <img
-        src="analysis/chart_class_distribution.png"
-        style="width:100%; max-height:390px; object-fit:contain; border-radius:8px"
-        alt="Class distribution pie chart"
+        src="analysis/chart_label_distribution_comparison.png?v=2"
+        style="width:100%; max-height:430px; object-fit:contain; border-radius:8px"
+        alt="Rating-only versus weak-label class distribution pie charts"
       />
-      <div class="chart-caption">57.3% Positive · 23.7% Negative · 19.0% Neutral</div>
+      <div class="chart-caption">Rating-only: 49.2% positive / 29.7% negative / 21.1% neutral -> weak label: 57.3% positive / 23.7% negative / 19.0% neutral.</div>
     </div>
   </div>
 </section>

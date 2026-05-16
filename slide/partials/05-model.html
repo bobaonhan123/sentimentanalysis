@@ -1,8 +1,8 @@
-<!-- SLIDE: Section 03 Header -->
+<!-- SLIDE: Section 04 Header -->
 <section class="section-title">
-  <div class="section-badge">03</div>
+  <div class="section-badge">04</div>
   <h2>Modeling Strategy</h2>
-  <p style="font-size: 0.8em">Weak labels · label quality · neutral handling · deployable models</p>
+  <p style="font-size: 0.8em">Weak labels - label quality - neutral handling - deployable models</p>
 </section>
 
 <!-- SLIDE: Labeling Challenge -->
@@ -55,19 +55,19 @@
         <td>TF-IDF Word+Char, FastText+MLP</td>
       </tr>
       <tr>
-        <td>Cleaned 3-Class</td>
+        <td>Cleaned 3-class</td>
         <td>What if we remove likely mislabeled reviews first?</td>
-        <td>TF-IDF Word+Char Logistic/SVC</td>
+        <td>TF-IDF Word+Char</td>
       </tr>
       <tr>
         <td>Binary no-neutral</td>
         <td>How strong is clear positive vs negative detection?</td>
-        <td>TF-IDF Word+Char Logistic/SVC</td>
+        <td>TF-IDF Word+Char</td>
       </tr>
       <tr>
         <td>Mixed/conflict 4-class</td>
         <td>Can mixed reviews become their own class?</td>
-        <td>TF-IDF Word+Char Logistic/SVC</td>
+        <td>TF-IDF Word+Char</td>
       </tr>
     </tbody>
   </table>
@@ -89,7 +89,7 @@
       <div class="card" style="margin-top: 8px">
         <div class="card-title">Output</div>
         <p style="font-size: 0.62em; color: var(--c2); margin: 0">
-          The audit file keeps the ranked suspicious labels for manual review.
+          The audit keeps the ranked suspicious labels for manual review.
         </p>
       </div>
     </div>

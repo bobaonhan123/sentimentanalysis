@@ -1,128 +1,134 @@
-<!-- SLIDE: Results Table -->
+<!-- SLIDE: Experiment Results Table -->
 <section>
-  <h2>Result: Label Quality Was the Turning Point</h2>
-  <p style="font-size: 0.66em; color: var(--c2); margin-bottom: 10px">
-    Same 70/15/15 split design. Metric priority: Macro F1 because classes are imbalanced.
+  <h2>Experiment Results: 7 Target Models</h2>
+  <p style="font-size: 0.6em; color: var(--c2); margin-bottom: 8px">
+    Same evaluation focus: Accuracy, Macro Recall, and Macro F1. Best deployable polarity result is highlighted.
   </p>
-  <div class="cols" style="align-items:center">
-    <div class="col-wide">
-      <img src="analysis/chart_variant_results.png" style="width:100%; max-height:500px; object-fit:contain; border-radius:10px" alt="Sentiment experiment comparison" />
-    </div>
-    <div class="col-narrow">
-      <table style="font-size:0.5em">
-        <thead>
+  <table style="font-size:0.38em">
+    <thead>
+      <tr>
+        <th rowspan="2">Model</th>
+        <th colspan="3" class="center">With neutral label</th>
+        <th colspan="3" class="center">No neutral label</th>
+      </tr>
+      <tr>
+        <th class="center">Acc.</th>
+        <th class="center">Recall</th>
+        <th class="center">F1</th>
+        <th class="center">Acc.</th>
+        <th class="center">Recall</th>
+        <th class="center">F1</th>
+      </tr>
+    </thead>
+    <tbody>
           <tr>
-            <th>Model</th>
-            <th class="center">Acc.</th>
-            <th class="center">F1</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>TF-IDF + Logistic + Cleaned 3-Class</td>
-            <td class="center">91.78%</td>
-            <td class="center">0.877</td>
-          </tr>
-          <tr>
-            <td>TF-IDF + Logistic + Original 3-Class</td>
-            <td class="center">79.73%</td>
-            <td class="center">0.720</td>
-          </tr>
-          <tr>
-            <td>TF-IDF + Logistic + Mixed 4-Class</td>
-            <td class="center">78.87%</td>
-            <td class="center">0.618</td>
+            <td>Logistic Regression</td>
+            <td class="center">0.752</td>
+            <td class="center">0.699</td>
+            <td class="center">0.692</td>
+            <td class="center">0.931</td>
+            <td class="center">0.919</td>
+            <td class="center">0.917</td>
           </tr>
           <tr class="highlight-row">
-            <td>TF-IDF + LinearSVC + Binary*</td>
-            <td class="center">93.25%</td>
+            <td>Linear SVC</td>
+            <td class="center">0.765</td>
+            <td class="center">0.705</td>
+            <td class="center">0.696</td>
+            <td class="center">0.932</td>
+            <td class="center">0.918</td>
             <td class="center">0.918</td>
           </tr>
-        </tbody>
-      </table>
-      <div class="chart-caption">*Binary removes neutral, so it is a separate polarity-only setting.</div>
-    </div>
+          <tr>
+            <td>Random Forest</td>
+            <td class="center">0.762</td>
+            <td class="center">0.624</td>
+            <td class="center">0.648</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+          </tr>
+          <tr>
+            <td>Gaussian NB</td>
+            <td class="center">0.705</td>
+            <td class="center">0.662</td>
+            <td class="center">0.650</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+          </tr>
+          <tr>
+            <td>FastText+MLP</td>
+            <td class="center">0.797</td>
+            <td class="center">0.724</td>
+            <td class="center">0.728</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+          </tr>
+          <tr>
+            <td>FastText+LSTM</td>
+            <td class="center">0.753</td>
+            <td class="center">0.714</td>
+            <td class="center">0.700</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+          </tr>
+          <tr>
+            <td>PhoBERT</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+            <td class="center">-</td>
+          </tr>
+    </tbody>
+  </table>
+  <div class="chart-caption">
+    Dash means the current artifact does not contain that no-neutral run. PhoBERT fills in after its result JSON is exported.
   </div>
 </section>
 
-<!-- SLIDE: Model Comparison -->
+<!-- SLIDE: Experiment F1 Chart -->
 <section>
-  <h2>Model Comparison</h2>
+  <h2>Consistent Model Comparison</h2>
   <div class="cols" style="align-items:center">
     <div class="col-wide">
-      <img src="analysis/chart_selected_model_comparison.png" style="width:100%; max-height:520px; object-fit:contain; border-radius:10px" alt="Selected model comparison" />
+      <img
+        src="analysis/chart_experiment_f1_comparison.png?v=1"
+        style="width:100%; max-height:535px; object-fit:contain; border-radius:10px"
+        alt="Macro F1 comparison for seven target models"
+      />
     </div>
     <div class="col-narrow">
-      <table style="font-size:0.48em">
-        <thead>
-          <tr><th>Model</th><th class="center">F1</th></tr>
-        </thead>
-        <tbody>
-          <tr class="highlight-row"><td>TF-IDF + LinearSVC + Binary</td><td class="center">0.918</td></tr>
-          <tr><td>TF-IDF + Logistic + Cleaned 3-Class</td><td class="center">0.877</td></tr>
-          <tr><td>FastText + MLP + 3-Class</td><td class="center">0.728</td></tr>
-          <tr><td>TF-IDF + Logistic + Original 3-Class</td><td class="center">0.720</td></tr>
-          <tr><td>FastText + LSTM + 3-Class</td><td class="center">0.700</td></tr>
-          <tr><td>FastText + RandomForest + 3-Class</td><td class="center">0.648</td></tr>
-        </tbody>
-      </table>
-      <div class="chart-caption">Selected representative models: TF-IDF variants plus FastText MLP/LSTM/RF baselines.</div>
+      <div class="card">
+        <div class="card-title">Main Reading</div>
+        <p style="font-size:0.54em; margin:0">
+          Removing neutral gives the strongest polarity classifier, while cleaned 3-class labels are better for business interpretation.
+        </p>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <div class="card-title">Model Scope</div>
+        <p style="font-size:0.54em; margin:0">
+          The comparison focuses on Logistic Regression, Linear SVC, Random Forest, Gaussian NB, FastText+MLP, FastText+LSTM, and PhoBERT.
+        </p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- SLIDE: Neutral Handling -->
+<!-- SLIDE: Model Convergence -->
 <section>
-  <h2>So, Should We Keep Neutral?</h2>
-  <div class="cols equal-cards">
-    <div class="card">
-      <div class="card-title">Keep Neutral?</div>
-      <p>
-        Yes, if the goal is business interpretation. Neutral prevents the system from forcing uncertain or mixed reviews into positive/negative.
-      </p>
-    </div>
-    <div class="card">
-      <div class="card-title">Remove Neutral?</div>
-      <p>
-        Yes, if the goal is a high-confidence polarity classifier. Removing ambiguous cases increased Macro F1 to 0.918.
-      </p>
-    </div>
-    <div class="card">
-      <div class="card-title">Best Practical Choice</div>
-      <p>
-        Use the binary model for alerting, and the cleaned 3-class model when neutral interpretation is needed.
-      </p>
-    </div>
-  </div>
-  <div class="card" style="margin-top: 12px; text-align: center">
-    <p style="font-size: 0.64em; margin: 0">
-      The strongest improvement came from <strong style="color: var(--c1)">cleaning labels</strong>, not from adding model complexity.
-    </p>
-  </div>
-</section>
-
-<!-- SLIDE: Result Benchmarking -->
-<section>
-  <h2>Are These Results Reasonable?</h2>
-  <div class="cols equal-cards">
-    <div class="card">
-      <div class="card-title">External Benchmarks</div>
-      <ul style="font-size: 0.6em; color: var(--c2); padding-left: 1.2em; margin: 0">
-        <li>SemEval-2013 Twitter message-level best F1 was about 69%.</li>
-        <li>SentiBench reports 3-class sentiment Macro F1 around 0.6 for best tools.</li>
-        <li>Neutral is repeatedly reported as harder than positive or negative.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <div class="card-title">Our Position</div>
-      <ul style="font-size: 0.6em; color: var(--c2); padding-left: 1.2em; margin: 0">
-        <li>Original 3-class F1 0.720 is not unusually low for noisy neutral sentiment.</li>
-        <li>Cleaned 3-class F1 0.877 is strong for a self-collected weak-label dataset.</li>
-        <li>Binary F1 0.918 is suitable for production-style polarity alerting.</li>
-      </ul>
-    </div>
-  </div>
+  <h2>Best Neural Model Convergence</h2>
+  <img
+    src="analysis/chart_model_convergence.png?v=1"
+    style="width:100%; max-height:555px; object-fit:contain; border-radius:10px"
+    alt="Training and validation convergence chart"
+  />
   <div class="chart-caption">
-    References: Nakov et al. (2013); Ribeiro et al. (2016); Dey et al. (2017); Northcutt et al. (2021).
+    Classical ML models do not have epoch curves, so this chart uses the best neural run with saved training history.
   </div>
 </section>
+

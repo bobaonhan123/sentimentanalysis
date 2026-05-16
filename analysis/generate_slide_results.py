@@ -12,21 +12,28 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import sys
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from src.training.labeling import LABEL_NAMES, load_labeled_data, rating_to_sentiment
+
 ANALYSIS_DIR = ROOT / "analysis"
 SLIDE_ANALYSIS_DIRS = [ROOT / "slide" / "analysis", ROOT / "slide" / "public" / "analysis"]
 TRAINING_RESULTS = ANALYSIS_DIR / "training_results.json"
 PHOBERT_RESULTS = ANALYSIS_DIR / "phobert_outputs" / "phobert_results.json"
 RESULTS_PARTIAL = ROOT / "slide" / "partials" / "06-results.html"
+REVIEWS_CSV = ROOT / "data_post_processing" / "1900_export_reviews.csv"
 
 
 def _load_runs() -> list[dict]:
@@ -51,6 +58,15 @@ def _metric(result: dict, key: str) -> float:
     return float(result.get("test", {}).get(key, 0.0))
 
 
+def _metric_or_none(result: dict | None, key: str) -> float | None:
+    if not result or "error" in result:
+        return None
+    if key in result:
+        return float(result[key])
+    value = result.get("test", {}).get(key)
+    return None if value is None else float(value)
+
+
 def _phobert_rows() -> list[dict]:
     if not PHOBERT_RESULTS.exists():
         return []
@@ -58,7 +74,7 @@ def _phobert_rows() -> list[dict]:
     payload = json.loads(PHOBERT_RESULTS.read_text(encoding="utf-8"))
     rows = []
     for source_key, label in [
-        ("phobert", "PhoBERT + 3-Class"),
+        ("phobert", "PhoBERT"),
         ("phobert_neutralboost", "PhoBERT + NeutralBoost"),
     ]:
         result = payload.get(source_key)
@@ -98,9 +114,9 @@ def build_selected_rows(variant_run: dict, full_run: dict | None) -> pd.DataFram
         "original_3class__TFIDF_WordChar_LogisticRegression",
     ]
     labels = {
-        "binary_no_neutral__TFIDF_WordChar_LinearSVC": "TF-IDF + LinearSVC + Binary",
-        "cleanlab_pruned_3class__TFIDF_WordChar_LogisticRegression": "TF-IDF + Logistic + Cleaned 3-Class",
-        "original_3class__TFIDF_WordChar_LogisticRegression": "TF-IDF + Logistic + Original 3-Class",
+        "binary_no_neutral__TFIDF_WordChar_LinearSVC": "TF-IDF Word+Char (Binary)",
+        "cleanlab_pruned_3class__TFIDF_WordChar_LogisticRegression": "TF-IDF Word+Char (Cleaned)",
+        "original_3class__TFIDF_WordChar_LogisticRegression": "TF-IDF Word+Char (Original)",
     }
     for name in selected_names:
         result = valid.get(name)
@@ -114,9 +130,9 @@ def build_selected_rows(variant_run: dict, full_run: dict | None) -> pd.DataFram
 
     if full_run:
         full_labels = {
-            "MLP_NeuralNet_Tuned": "FastText + MLP + 3-Class",
-            "LSTM_NeuralNet": "FastText + LSTM + 3-Class",
-            "RandomForest": "FastText + RandomForest + 3-Class",
+            "MLP_NeuralNet_Tuned": "FastText+MLP",
+            "LSTM_NeuralNet": "FastText+LSTM",
+            "RandomForest": "FastText+RF",
         }
         for name, label in full_labels.items():
             result = full_run.get("models", {}).get(name)
@@ -132,6 +148,59 @@ def build_selected_rows(variant_run: dict, full_run: dict | None) -> pd.DataFram
     return pd.DataFrame(rows).sort_values("f1_macro", ascending=False)
 
 
+def _phobert_metric(key: str) -> float | None:
+    if not PHOBERT_RESULTS.exists():
+        return None
+    payload = json.loads(PHOBERT_RESULTS.read_text(encoding="utf-8"))
+    result = payload.get("phobert") or payload.get("phobert_neutralboost")
+    if not result:
+        return None
+    if key == "recall_macro" and key not in result:
+        return None
+    return float(result[key]) if key in result else None
+
+
+def build_experiment_rows(variant_run: dict, full_run: dict | None) -> pd.DataFrame:
+    """Build the slide table requested by the deck: 7 target model families."""
+    full_models = full_run.get("models", {}) if full_run else {}
+    variant_models = variant_run.get("models", {})
+    specs = [
+        ("Logistic Regression", "LogisticRegression", "binary_no_neutral__TFIDF_WordChar_LogisticRegression"),
+        ("Linear SVC", "LinearSVC", "binary_no_neutral__TFIDF_WordChar_LinearSVC"),
+        ("Random Forest", "RandomForest", None),
+        ("Gaussian NB", "GaussianNB", None),
+        ("FastText+MLP", "MLP_NeuralNet_Tuned", None),
+        ("FastText+LSTM", "LSTM_NeuralNet", None),
+        ("PhoBERT", None, None),
+    ]
+
+    rows = []
+    for label, full_key, binary_key in specs:
+        full_result = full_models.get(full_key) if full_key else None
+        binary_result = variant_models.get(binary_key) if binary_key else None
+
+        if label == "PhoBERT":
+            with_acc = _phobert_metric("accuracy")
+            with_recall = _phobert_metric("recall_macro")
+            with_f1 = _phobert_metric("f1_macro")
+        else:
+            with_acc = _metric_or_none(full_result, "accuracy")
+            with_recall = _metric_or_none(full_result, "recall_macro")
+            with_f1 = _metric_or_none(full_result, "f1_macro")
+
+        rows.append({
+            "model": label,
+            "with_neutral_accuracy": with_acc,
+            "with_neutral_recall": with_recall,
+            "with_neutral_f1": with_f1,
+            "no_neutral_accuracy": _metric_or_none(binary_result, "accuracy"),
+            "no_neutral_recall": _metric_or_none(binary_result, "recall_macro"),
+            "no_neutral_f1": _metric_or_none(binary_result, "f1_macro"),
+        })
+
+    return pd.DataFrame(rows)
+
+
 def _family_color(model: str) -> str:
     if "PhoBERT" in model:
         return "#2563eb"
@@ -141,7 +210,7 @@ def _family_color(model: str) -> str:
         return "#a16207"
     if "Binary" in model:
         return "#16a34a"
-    if "TF-IDF" in model:
+    if "TF-IDF" in model or "TFIDF" in model:
         return "#64748b"
     return "#6b7280"
 
@@ -157,7 +226,8 @@ def _bar_chart(
     fig_h = max(4.2, 0.48 * len(plot_df) + 1.2)
     fig, ax = plt.subplots(figsize=(10.5, fig_h))
     colors = [_family_color(model) for model in plot_df["model"]]
-    bars = ax.barh(plot_df["model"], plot_df["f1_macro"], color=colors, alpha=0.9)
+    labels = [_slide_label(str(model)).replace("*", "") for model in plot_df["model"]]
+    bars = ax.barh(labels, plot_df["f1_macro"], color=colors, alpha=0.9)
     ax.set_xlim(0.45, 1.0)
     ax.set_xlabel("Macro F1")
     ax.set_title(title)
@@ -168,8 +238,8 @@ def _bar_chart(
         from matplotlib.patches import Patch
 
         handles = [
-            Patch(color="#64748b", label="TF-IDF models"),
-            Patch(color="#f97316", label="FastText + MLP"),
+            Patch(color="#64748b", label="TF-IDF Word+Char"),
+            Patch(color="#f97316", label="FastText+MLP"),
             Patch(color="#a16207", label="Other FastText baselines"),
             Patch(color="#16a34a", label="Binary polarity setting"),
             Patch(color="#2563eb", label="PhoBERT when available"),
@@ -180,11 +250,158 @@ def _bar_chart(
     plt.close(fig)
 
 
+def _experiment_f1_chart(df: pd.DataFrame, path: Path) -> None:
+    labels = df["model"].tolist()
+    x = np.arange(len(labels))
+    width = 0.34
+    with_f1 = df["with_neutral_f1"].astype(float).to_numpy()
+    no_f1 = df["no_neutral_f1"].astype(float).to_numpy()
+
+    fig, ax = plt.subplots(figsize=(11, 4.8))
+    bars1 = ax.bar(x - width / 2, with_f1, width, label="With neutral", color="#2563eb", alpha=0.88)
+    bars2 = ax.bar(x + width / 2, no_f1, width, label="No neutral", color="#16a34a", alpha=0.88)
+    ax.set_ylim(0.55, 1.0)
+    ax.set_ylabel("Macro F1")
+    ax.set_title("7 Target Models: Macro F1 by Neutral Setting")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=20, ha="right")
+    ax.grid(True, axis="y", alpha=0.22)
+    ax.legend(loc="upper right")
+
+    for bars in [bars1, bars2]:
+        for bar in bars:
+            value = bar.get_height()
+            if np.isnan(value):
+                continue
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                value + 0.008,
+                f"{value:.3f}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+            )
+
+    plt.tight_layout()
+    fig.savefig(path, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _find_convergence_history(runs: list[dict]) -> tuple[str, dict] | None:
+    candidates: list[tuple[float, str, dict]] = []
+    for run in runs:
+        for name, result in run.get("models", {}).items():
+            history = result.get("history") if isinstance(result, dict) else None
+            if history and ("val_accuracy" in history or "val_loss" in history):
+                candidates.append((_metric_or_none(result, "f1_macro") or 0.0, name, history))
+    if not candidates:
+        return None
+    _, name, history = max(candidates, key=lambda item: item[0])
+    return name, history
+
+
+def _convergence_chart(runs: list[dict], path: Path) -> bool:
+    found = _find_convergence_history(runs)
+    if not found:
+        return False
+    name, history = found
+    epochs = np.arange(1, len(next(iter(history.values()))) + 1)
+
+    fig, ax1 = plt.subplots(figsize=(10.5, 4.6))
+    if "accuracy" in history:
+        ax1.plot(epochs, history["accuracy"], marker="o", color="#2563eb", label="Train accuracy")
+    if "val_accuracy" in history:
+        ax1.plot(epochs, history["val_accuracy"], marker="o", color="#16a34a", label="Validation accuracy")
+    ax1.set_ylim(0.45, 1.0)
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Accuracy")
+    ax1.set_xticks(epochs)
+    ax1.grid(True, alpha=0.22)
+
+    ax2 = ax1.twinx()
+    if "loss" in history:
+        ax2.plot(epochs, history["loss"], linestyle="--", color="#f97316", label="Train loss")
+    if "val_loss" in history:
+        ax2.plot(epochs, history["val_loss"], linestyle="--", color="#ef4444", label="Validation loss")
+    ax2.set_ylabel("Loss")
+
+    lines, labels = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines + lines2, labels + labels2, loc="center right", fontsize=8)
+    ax1.set_title(f"Best Neural Model Convergence: {_slide_label(name)}")
+
+    plt.tight_layout()
+    fig.savefig(path, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+    return True
+
+
 def _copy_to_slide(paths: list[Path]) -> None:
     for directory in SLIDE_ANALYSIS_DIRS:
         directory.mkdir(parents=True, exist_ok=True)
         for path in paths:
             shutil.copy2(path, directory / path.name)
+
+
+def _distribution_frame(counts: pd.Series, label: str) -> pd.DataFrame:
+    order = ["negative", "neutral", "positive"]
+    counts = counts.reindex(order).fillna(0).astype(int)
+    total = int(counts.sum())
+    return pd.DataFrame({
+        "source": label,
+        "class": order,
+        "count": [int(counts[c]) for c in order],
+        "pct": [float(counts[c]) / max(total, 1) * 100 for c in order],
+    })
+
+
+def build_label_distribution_comparison() -> pd.DataFrame:
+    raw = pd.read_csv(REVIEWS_CSV)
+    rating_counts = raw["rating"].apply(rating_to_sentiment).map(LABEL_NAMES).value_counts()
+
+    weak = load_labeled_data(REVIEWS_CSV)
+    weak_counts = weak["sentiment_name"].value_counts()
+
+    out = pd.concat([
+        _distribution_frame(rating_counts, "Rating-only"),
+        _distribution_frame(weak_counts, "Weak label"),
+    ], ignore_index=True)
+    changed = int((weak["sentiment"] != weak["rating"].apply(rating_to_sentiment)).sum())
+    out["changed_count"] = changed
+    out["changed_pct"] = changed / max(len(weak), 1) * 100
+    return out
+
+
+def _label_distribution_chart(df: pd.DataFrame, path: Path) -> None:
+    colors = {"negative": "#F44336", "neutral": "#9E9E9E", "positive": "#4CAF50"}
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2))
+
+    for ax, source in zip(axes, ["Rating-only", "Weak label"]):
+        part = df[df["source"] == source].copy()
+        labels = [c.capitalize() for c in part["class"]]
+        values = part["count"].tolist()
+        pie_colors = [colors[c] for c in part["class"]]
+        ax.pie(
+            values,
+            labels=labels,
+            autopct="%1.1f%%",
+            startangle=90,
+            colors=pie_colors,
+            textprops={"fontsize": 9},
+        )
+        ax.set_title(f"{source} distribution", fontsize=12, fontweight="bold")
+
+    changed_count = int(df["changed_count"].iloc[0])
+    changed_pct = float(df["changed_pct"].iloc[0])
+    fig.suptitle(
+        f"Class Distribution Before vs After Keyword/ABSA Weak Labeling\n"
+        f"{changed_count:,} reviews re-labeled ({changed_pct:.1f}%)",
+        fontsize=13,
+        fontweight="bold",
+    )
+    plt.tight_layout(rect=[0, 0, 1, 0.88])
+    fig.savefig(path, dpi=160, bbox_inches="tight")
+    plt.close(fig)
 
 
 def _pct(value: float) -> str:
@@ -195,16 +412,24 @@ def _f1(value: float) -> str:
     return f"{value:.3f}"
 
 
+def _metric_cell(value: float | None) -> str:
+    if value is None or pd.isna(value):
+        return "-"
+    return f"{float(value):.3f}"
+
+
 def _slide_label(model_name: str) -> str:
     labels = {
-        "binary_no_neutral__TFIDF_WordChar_LinearSVC": "TF-IDF + LinearSVC + Binary*",
-        "binary_no_neutral__TFIDF_WordChar_LogisticRegression": "TF-IDF + Logistic + Binary*",
-        "cleanlab_pruned_3class__TFIDF_WordChar_LogisticRegression": "TF-IDF + Logistic + Cleaned 3-Class",
-        "cleanlab_pruned_3class__TFIDF_WordChar_LinearSVC": "TF-IDF + LinearSVC + Cleaned 3-Class",
-        "original_3class__TFIDF_WordChar_LogisticRegression": "TF-IDF + Logistic + Original 3-Class",
-        "original_3class__TFIDF_WordChar_LinearSVC": "TF-IDF + LinearSVC + Original 3-Class",
-        "mixed_conflict_4class__TFIDF_WordChar_LogisticRegression": "TF-IDF + Logistic + Mixed 4-Class",
-        "mixed_conflict_4class__TFIDF_WordChar_LinearSVC": "TF-IDF + LinearSVC + Mixed 4-Class",
+        "binary_no_neutral__TFIDF_WordChar_LinearSVC": "TF-IDF Word+Char (Binary)*",
+        "binary_no_neutral__TFIDF_WordChar_LogisticRegression": "TF-IDF Word+Char (Binary)",
+        "cleanlab_pruned_3class__TFIDF_WordChar_LogisticRegression": "TF-IDF Word+Char (Cleaned)",
+        "cleanlab_pruned_3class__TFIDF_WordChar_LinearSVC": "TF-IDF Word+Char (Cleaned)",
+        "original_3class__TFIDF_WordChar_LogisticRegression": "TF-IDF Word+Char (Original)",
+        "original_3class__TFIDF_WordChar_LinearSVC": "TF-IDF Word+Char (Original)",
+        "mixed_conflict_4class__TFIDF_WordChar_LogisticRegression": "TF-IDF Word+Char (Mixed)",
+        "mixed_conflict_4class__TFIDF_WordChar_LinearSVC": "TF-IDF Word+Char (Mixed)",
+        "MLP_NeuralNet_Tuned": "FastText+MLP",
+        "LSTM_NeuralNet": "FastText+LSTM",
     }
     return labels.get(model_name, model_name)
 
@@ -259,14 +484,114 @@ def _replace_nth_tbody(html: str, index: int, rows_html: str) -> str:
     return html[: match.start()] + replacement + html[match.end() :]
 
 
-def update_results_partial(variant_df: pd.DataFrame, selected_df: pd.DataFrame) -> None:
-    html = RESULTS_PARTIAL.read_text(encoding="utf-8")
-    html = _replace_nth_tbody(html, 0, _result_table_rows(variant_df))
-    html = _replace_nth_tbody(html, 1, _selected_table_rows(selected_df))
-    html = html.replace(
-        "Selected representative models only.",
-        "Selected representative models: TF-IDF variants plus FastText MLP/LSTM/RF baselines.",
+def _experiment_table_rows(experiment_df: pd.DataFrame) -> str:
+    rows = []
+    best = max(
+        [
+            value
+            for value in pd.concat([experiment_df["with_neutral_f1"], experiment_df["no_neutral_f1"]]).tolist()
+            if value is not None and not pd.isna(value)
+        ],
+        default=0.0,
     )
+    for _, row in experiment_df.iterrows():
+        row_best = any(
+            value is not None and not pd.isna(value) and abs(float(value) - best) < 1e-9
+            for value in [row["with_neutral_f1"], row["no_neutral_f1"]]
+        )
+        cls = ' class="highlight-row"' if row_best else ""
+        rows.append(
+            f'          <tr{cls}>\n'
+            f"            <td>{row['model']}</td>\n"
+            f'            <td class="center">{_metric_cell(row["with_neutral_accuracy"])}</td>\n'
+            f'            <td class="center">{_metric_cell(row["with_neutral_recall"])}</td>\n'
+            f'            <td class="center">{_metric_cell(row["with_neutral_f1"])}</td>\n'
+            f'            <td class="center">{_metric_cell(row["no_neutral_accuracy"])}</td>\n'
+            f'            <td class="center">{_metric_cell(row["no_neutral_recall"])}</td>\n'
+            f'            <td class="center">{_metric_cell(row["no_neutral_f1"])}</td>\n'
+            "          </tr>"
+        )
+    return "\n".join(rows)
+
+
+def update_results_partial(experiment_df: pd.DataFrame, has_convergence: bool) -> None:
+    convergence_slide = ""
+    if has_convergence:
+        convergence_slide = """
+<!-- SLIDE: Model Convergence -->
+<section>
+  <h2>Best Neural Model Convergence</h2>
+  <img
+    src="analysis/chart_model_convergence.png?v=1"
+    style="width:100%; max-height:555px; object-fit:contain; border-radius:10px"
+    alt="Training and validation convergence chart"
+  />
+  <div class="chart-caption">
+    Classical ML models do not have epoch curves, so this chart uses the best neural run with saved training history.
+  </div>
+</section>
+"""
+
+    html = f"""<!-- SLIDE: Experiment Results Table -->
+<section>
+  <h2>Experiment Results: 7 Target Models</h2>
+  <p style="font-size: 0.6em; color: var(--c2); margin-bottom: 8px">
+    Same evaluation focus: Accuracy, Macro Recall, and Macro F1. Best deployable polarity result is highlighted.
+  </p>
+  <table style="font-size:0.38em">
+    <thead>
+      <tr>
+        <th rowspan="2">Model</th>
+        <th colspan="3" class="center">With neutral label</th>
+        <th colspan="3" class="center">No neutral label</th>
+      </tr>
+      <tr>
+        <th class="center">Acc.</th>
+        <th class="center">Recall</th>
+        <th class="center">F1</th>
+        <th class="center">Acc.</th>
+        <th class="center">Recall</th>
+        <th class="center">F1</th>
+      </tr>
+    </thead>
+    <tbody>
+{_experiment_table_rows(experiment_df)}
+    </tbody>
+  </table>
+  <div class="chart-caption">
+    Dash means the current artifact does not contain that no-neutral run. PhoBERT fills in after its result JSON is exported.
+  </div>
+</section>
+
+<!-- SLIDE: Experiment F1 Chart -->
+<section>
+  <h2>Consistent Model Comparison</h2>
+  <div class="cols" style="align-items:center">
+    <div class="col-wide">
+      <img
+        src="analysis/chart_experiment_f1_comparison.png?v=1"
+        style="width:100%; max-height:535px; object-fit:contain; border-radius:10px"
+        alt="Macro F1 comparison for seven target models"
+      />
+    </div>
+    <div class="col-narrow">
+      <div class="card">
+        <div class="card-title">Main Reading</div>
+        <p style="font-size:0.54em; margin:0">
+          Removing neutral gives the strongest polarity classifier, while cleaned 3-class labels are better for business interpretation.
+        </p>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <div class="card-title">Model Scope</div>
+        <p style="font-size:0.54em; margin:0">
+          The comparison focuses on Logistic Regression, Linear SVC, Random Forest, Gaussian NB, FastText+MLP, FastText+LSTM, and PhoBERT.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+{convergence_slide}
+"""
     RESULTS_PARTIAL.write_text(html, encoding="utf-8")
 
 
@@ -277,29 +602,46 @@ def main() -> None:
 
     variant_df = build_variant_rows(variant_run)
     selected_df = build_selected_rows(variant_run, full_run)
+    experiment_df = build_experiment_rows(variant_run, full_run)
+    label_df = build_label_distribution_comparison()
 
     variant_csv = ANALYSIS_DIR / "slide_variant_results.csv"
     selected_csv = ANALYSIS_DIR / "slide_selected_model_results.csv"
+    label_csv = ANALYSIS_DIR / "slide_label_distribution_comparison.csv"
+    experiment_csv = ANALYSIS_DIR / "slide_experiment_comparison.csv"
     variant_df.to_csv(variant_csv, index=False, encoding="utf-8-sig")
     selected_df.to_csv(selected_csv, index=False, encoding="utf-8-sig")
+    experiment_df.to_csv(experiment_csv, index=False, encoding="utf-8-sig")
+    label_df.to_csv(label_csv, index=False, encoding="utf-8-sig")
 
     variant_chart = ANALYSIS_DIR / "chart_variant_results.png"
     selected_chart = ANALYSIS_DIR / "chart_selected_model_comparison.png"
+    label_chart = ANALYSIS_DIR / "chart_label_distribution_comparison.png"
+    experiment_chart = ANALYSIS_DIR / "chart_experiment_f1_comparison.png"
+    convergence_chart = ANALYSIS_DIR / "chart_model_convergence.png"
+    _label_distribution_chart(label_df, label_chart)
+    _experiment_f1_chart(experiment_df, experiment_chart)
+    has_convergence = _convergence_chart(runs, convergence_chart)
     _bar_chart(variant_df, variant_chart, "Label Variant Experiments by Macro F1", top_n=10)
     _bar_chart(
         selected_df,
         selected_chart,
-        "Selected Model Comparison: TF-IDF vs FastText MLP/LSTM/RF",
+        "Selected Model Comparison: TF-IDF Word+Char vs FastText",
         top_n=None,
         legend=True,
     )
-    _copy_to_slide([variant_chart, selected_chart])
-    update_results_partial(variant_df, selected_df)
+    chart_paths = [variant_chart, selected_chart, label_chart, experiment_chart]
+    if has_convergence:
+        chart_paths.append(convergence_chart)
+    _copy_to_slide(chart_paths)
+    update_results_partial(experiment_df, has_convergence)
 
     print(f"Variant table: {variant_csv}")
     print(f"Selected table: {selected_csv}")
+    print(f"Experiment table: {experiment_csv}")
+    print(f"Label distribution table: {label_csv}")
     print(f"PhoBERT included: {PHOBERT_RESULTS.exists()}")
-    print(f"Charts: {variant_chart}, {selected_chart}")
+    print(f"Charts: {', '.join(str(p) for p in chart_paths)}")
 
 
 if __name__ == "__main__":

@@ -60,29 +60,102 @@
   </div>
 </section>
 
-<!-- SLIDE: Project Goals -->
+<!-- SLIDE: Solution Flow Diagram -->
 <section>
-  <h2>Project Goals</h2>
-  <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px">
-    <div class="pipeline-step" style="padding:13px 18px">
-      <div class="num">1</div>
-      <div class="op" style="min-width:180px">Build the data pipeline</div>
-      <div class="why">Collect, clean, and structure Vietnamese workplace reviews.</div>
+  <h2>Flow Architecture</h2>
+  <p style="font-size:0.62em; color:var(--c2); margin:0 0 14px">
+    One abstract pipeline supports all model families: TF-IDF Word+Char, FastText models, PhoBERT, and ABSA.
+  </p>
+
+  <style>
+    .flow-arrow {
+      position: relative;
+      height: 4px;
+      background: var(--c3);
+      border-radius: 999px;
+      min-width: 42px;
+    }
+    .flow-arrow::after {
+      content: "";
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      width: 0;
+      height: 0;
+      border-top: 11px solid transparent;
+      border-bottom: 11px solid transparent;
+      border-left: 16px solid var(--c3);
+      transform: translateY(-50%);
+    }
+    .flow-card {
+      height: 158px;
+      flex: 0 0 31%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 16px 18px;
+      overflow: hidden;
+    }
+    .flow-card .card-title {
+      font-size: 0.66em;
+      line-height: 1.18;
+      margin-bottom: 6px;
+    }
+    .flow-card p {
+      font-size: 0.47em;
+      line-height: 1.36;
+      margin: 0;
+      color: var(--c2);
+    }
+    .flow-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      width: 100%;
+    }
+    .flow-row-bottom {
+      margin-top: 22px;
+    }
+  </style>
+
+  <div class="flow-row" style="margin-top:10px">
+    <div class="card flow-card" style="border-top:4px solid var(--c3)">
+      <div class="card-title">Review Dataset</div>
+      <p>
+        Vietnamese workplace reviews with text, rating, company, industry, time, and profile metadata.
+      </p>
     </div>
-    <div class="pipeline-step" style="padding:13px 18px">
-      <div class="num">2</div>
-      <div class="op" style="min-width:180px">Train sentiment models</div>
-      <div class="why">Compare ML, embedding-based, and deep learning models under noisy labels.</div>
+    <div class="flow-arrow" aria-hidden="true"></div>
+    <div class="card flow-card" style="border-top:4px solid var(--accent)">
+      <div class="card-title">Data Preparation</div>
+      <p>
+        Clean text, normalize Vietnamese, tokenize, create weak labels, and audit noisy labels.
+      </p>
     </div>
-    <div class="pipeline-step" style="padding:13px 18px">
-      <div class="num">3</div>
-      <div class="op" style="min-width:180px">Extract business insights</div>
-      <div class="why">Identify critical issues by aspect, industry, company group, and time.</div>
+    <div class="flow-arrow" aria-hidden="true"></div>
+    <div class="card flow-card" style="border-top:4px solid var(--c-neu)">
+      <div class="card-title">Text Representation</div>
+      <p>
+        Convert text into features: TF-IDF Word+Char, FastText vectors, sequence tokens, or transformer inputs.
+      </p>
     </div>
-    <div class="pipeline-step" style="padding:13px 18px">
-      <div class="num">4</div>
-      <div class="op" style="min-width:180px">Deliver a dashboard</div>
-      <div class="why">Make the trained model and ABSA analysis usable for non-technical users.</div>
+  </div>
+
+  <div class="flow-row flow-row-bottom">
+    <div class="card flow-card" style="border-top:4px solid var(--c-pos)">
+      <div class="card-title">Train &amp; Compare Models</div>
+      <p>
+        Evaluate multiple settings: original 3-class, cleaned 3-class, binary, mixed-conflict, and ABSA rules.
+      </p>
+    </div>
+    <div class="flow-arrow" aria-hidden="true"></div>
+    <div class="card flow-card" style="border-top:4px solid var(--c-neg)">
+      <div class="card-title">Business Outputs</div>
+      <p>
+        Sentiment predictions, aspect-level insights, trend monitoring, segment hotspots, and dashboard views.
+      </p>
     </div>
   </div>
 </section>
