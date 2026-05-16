@@ -35,6 +35,7 @@ OUT_FOCUS_YEAR = DIR / "absa_focus_industry_year.csv"
 OUT_FOCUS_YOY = DIR / "absa_focus_industry_yoy.csv"
 OUT_FOCUS_COMPANY = DIR / "absa_focus_company_aspects.csv"
 OUT_RECOMMENDATIONS = DIR / "absa_business_recommendations.csv"
+OUT_BUSINESS_CASE = DIR / "absa_business_case_bmbsoft_2025.csv"
 
 
 def _group_summary(df: pd.DataFrame, group_cols: list[str]) -> pd.DataFrame:
@@ -355,7 +356,7 @@ def focus_company_bubble_chart(df: pd.DataFrame, industry: str) -> tuple[pd.Data
     max_mentions = max(float(plot["Total Mentions"].max()), 1.0)
     sizes = 90 + (plot["Total Mentions"] / max_mentions) * 850
 
-    fig, ax = plt.subplots(figsize=(11.8, 5.8))
+    fig, ax = plt.subplots(figsize=(12.8, 5.8))
     scatter = ax.scatter(
         plot["x"],
         plot["y"],
@@ -377,10 +378,15 @@ def focus_company_bubble_chart(df: pd.DataFrame, industry: str) -> tuple[pd.Data
     ax.set_yticks(range(len(companies)))
     ax.set_yticklabels([_short_label(c, 24) for c in companies], fontsize=8)
     ax.invert_yaxis()
-    ax.set_title(f"{industry}: Representative Company Aspect Hotspots")
+    ax.set_title(
+        f"{industry}: Company Aspect Hotspots\n"
+        "color/text = negative ratio; bubble size = aspect mention volume",
+        fontsize=11,
+        pad=10,
+    )
     ax.grid(True, color="#e2e8f0", linewidth=0.8)
-    cbar = plt.colorbar(scatter, ax=ax, shrink=0.86)
-    cbar.set_label("Negative mentions (%)")
+    cbar = plt.colorbar(scatter, ax=ax, shrink=0.86, pad=0.14)
+    cbar.set_label("Negative ratio (color, %)")
 
     legend_sizes = [20, 60, 120]
     handles = [
@@ -390,9 +396,121 @@ def focus_company_bubble_chart(df: pd.DataFrame, industry: str) -> tuple[pd.Data
     ]
     labels = [f"{size} mentions" for size in legend_sizes if size <= max_mentions]
     if handles:
-        ax.legend(handles, labels, title="Bubble size", loc="upper right", bbox_to_anchor=(1.0, 1.02), frameon=True, fontsize=8)
-    plt.tight_layout()
+        ax.legend(
+            handles,
+            labels,
+            title="Mention volume\n(size)",
+            loc="upper left",
+            bbox_to_anchor=(1.01, 1.0),
+            frameon=True,
+            fontsize=8,
+        )
+    fig.text(
+        0.5,
+        0.01,
+        "Bubble area shows total aspect mentions; color and the number inside each bubble show negative ratio.",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        color="#475569",
+    )
+    plt.tight_layout(rect=(0, 0.045, 1, 1))
     path = DIR / "absa_focus_company_bubble.png"
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return summary, path
+
+
+def business_case_chart(
+    df: pd.DataFrame,
+    industry: str,
+    company: str = "BMBSOFT Vietnam Co., Ltd",
+    year: int = 2025,
+) -> tuple[pd.DataFrame, Path]:
+    """Create one company-year recommendation chart for a concrete business case."""
+    recent = _clean_periods(df)
+    case = recent[
+        (recent["industry"] == industry)
+        & (recent["company"] == company)
+        & (recent["period_year"] == float(year))
+    ].copy()
+    if case.empty:
+        year_focus = recent[(recent["industry"] == industry) & (recent["period_year"] == float(year))].copy()
+        company_volume = (
+            year_focus.groupby("company")
+            .agg(
+                Review_Count=("review_id", "nunique"),
+                Total_Mentions=("review_id", "size"),
+                Negative_Mentions=("sentiment", lambda x: int((x == "Negative").sum())),
+            )
+            .reset_index()
+        )
+        company_volume["Negative %"] = (
+            company_volume["Negative_Mentions"] / company_volume["Total_Mentions"].replace(0, 1) * 100
+        )
+        candidate = company_volume[
+            (company_volume["Review_Count"] >= 20) & (company_volume["Total_Mentions"] >= 80)
+        ].sort_values(["Negative_Mentions", "Negative %"], ascending=[False, False])
+        if candidate.empty:
+            candidate = company_volume.sort_values(["Negative_Mentions", "Total_Mentions"], ascending=[False, False])
+        company = str(candidate.iloc[0]["company"])
+        case = year_focus[year_focus["company"] == company].copy()
+
+    summary = _group_summary(case, ["aspect"])
+    summary = summary[summary["Total Mentions"] >= 3].copy()
+    summary["Company"] = company
+    summary["Year"] = year
+    summary["Industry"] = industry
+    summary["Negative Volume"] = summary["Negative"]
+    summary = summary.sort_values(["Total Mentions", "Negative Volume"], ascending=[False, False])
+    summary.to_csv(OUT_BUSINESS_CASE, index=False, encoding="utf-8-sig")
+
+    plot = summary.head(8).iloc[::-1].reset_index(drop=True)
+    y = np.arange(len(plot))
+    fig, ax = plt.subplots(figsize=(10.8, 5.2))
+    ax.barh(y, plot["Positive"], color="#16a34a", alpha=0.82, label="Positive")
+    ax.barh(y, plot["Neutral"], left=plot["Positive"], color="#f59e0b", alpha=0.82, label="Neutral")
+    ax.barh(
+        y,
+        plot["Negative"],
+        left=plot["Positive"] + plot["Neutral"],
+        color="#ef4444",
+        alpha=0.88,
+        label="Negative",
+    )
+    max_total = max(float(plot["Total Mentions"].max()), 1.0)
+    ax.set_xlim(0, max_total * 1.32)
+    ax.set_yticks(y)
+    ax.set_yticklabels([_short_label(a, 22) for a in plot["aspect"]], fontsize=9)
+    ax.set_xlabel("Aspect mentions")
+    ax.set_title(f"{company} ({year}) - Aspect Sentiment Mix", fontsize=12, pad=10)
+    ax.grid(True, axis="x", alpha=0.18)
+    ax.set_axisbelow(True)
+    ax.legend(loc="lower right", frameon=False, ncol=3, fontsize=8)
+    for i, row in plot.iterrows():
+        total = float(row["Total Mentions"])
+        ax.text(
+            total + max_total * 0.025,
+            i,
+            f"{row['Negative %']:.1f}% neg",
+            va="center",
+            fontsize=8,
+            color="#991b1b" if row["Negative %"] >= 50 else "#475569",
+        )
+
+    review_count = case["review_id"].nunique()
+    negative_ratio = (case["sentiment"].eq("Negative").sum() / max(len(case), 1) * 100)
+    fig.text(
+        0.5,
+        0.01,
+        f"{review_count:,} reviews, {len(case):,} aspect mentions, {negative_ratio:.1f}% overall negative aspect mentions.",
+        ha="center",
+        va="bottom",
+        fontsize=8,
+        color="#475569",
+    )
+    plt.tight_layout(rect=(0, 0.045, 1, 1))
+    path = DIR / "absa_business_case_bmbsoft_2025.png"
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     return summary, path
@@ -489,9 +607,10 @@ def main() -> None:
     focus_year, focus_year_chart = focus_industry_year_chart(df, focus)
     focus_yoy, focus_yoy_chart = focus_industry_yoy_chart(df, focus)
     focus_company, focus_company_chart = focus_company_bubble_chart(df, focus)
+    business_case, business_case_chart_path = business_case_chart(df, focus)
     recommendations = business_recommendations(df, focus, focus_year, focus_yoy, focus_company)
     recommendations.to_csv(OUT_RECOMMENDATIONS, index=False, encoding="utf-8-sig")
-    _copy_to_slide([focus_year_chart, focus_yoy_chart, focus_company_chart])
+    _copy_to_slide([focus_year_chart, focus_yoy_chart, focus_company_chart, business_case_chart_path])
 
     print(f"Representative companies: {OUT_REP_COMPANIES}")
     print(f"Industry aspect chart   : {industry_chart}")
@@ -501,8 +620,10 @@ def main() -> None:
     print(f"Focus yearly summary    : {OUT_FOCUS_YEAR} ({len(focus_year)} rows)")
     print(f"Focus YoY summary       : {OUT_FOCUS_YOY} ({len(focus_yoy)} rows)")
     print(f"Focus company summary   : {OUT_FOCUS_COMPANY} ({len(focus_company)} rows)")
+    print(f"Business case summary   : {OUT_BUSINESS_CASE} ({len(business_case)} rows)")
     print(f"Business recommendations: {OUT_RECOMMENDATIONS} ({len(recommendations)} rows)")
     print(f"Focus charts            : {focus_year_chart}, {focus_yoy_chart}, {focus_company_chart}")
+    print(f"Business case chart     : {business_case_chart_path}")
 
 
 if __name__ == "__main__":

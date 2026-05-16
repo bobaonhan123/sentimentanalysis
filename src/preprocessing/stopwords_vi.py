@@ -3,7 +3,6 @@
 Built from frequency analysis of the dataset:
 - Top-120 words by raw frequency were reviewed manually
 - Function words, pronouns, particles, conjunctions → stopword
-- Broken word fragments from compound splitting → stopword
 - Domain-meaningful words (lương, học, đồng, văn, dự, án...) → kept
 """
 from __future__ import annotations
@@ -33,32 +32,8 @@ _FUNCTION_WORDS: frozenset[str] = frozenset({
     "như", "nhau", "sự", "điều", "việc",
 })
 
-# ── Broken word fragments (compound splits common in Vietnamese typing) ───────
-# e.g. "công ty" typed separately → "ty" alone, "môi trường" → lone "trường"
-_FRAGMENTS: frozenset[str] = frozenset({
-    "ty",    # công ty → ty
-    "ot",    # overtime shortened / typo artifact
-    "trường",  # alone; kept only in compound "môi trường"
-    "nghiệp",  # alone; meaningful only in "đồng nghiệp" / "nghề nghiệp"
-    "viên",    # alone; meaningful in "nhân viên" / "chuyên viên"
-    "triển",   # alone from "phát triển"
-    "thiện",   # alone from "thân thiện"
-    "mái",     # alone from "thoải mái"
-    "thoải",   # alone from "thoải mái"
-    "tạo",     # alone from "sáng tạo" or "đào tạo" — too ambiguous standalone
-    "trình",   # alone from "quy trình" / "lộ trình"
-    "gian",    # alone from "thời gian"
-    "hỏi",     # alone from "học hỏi"
-    "nghiệm",  # alone from "kinh nghiệm"
-    "lý",      # alone from "quản lý" — too ambiguous
-    "trợ",     # alone from "hỗ trợ"
-    "hội",     # alone from "cơ hội" — keep "cơ hội" as bigram but skip lone "hội"
-    "độ",      # alone from "chế độ" / "nhiệt độ"
-    "ràng",    # alone from "rõ ràng"
-})
-
 # ── Combined stopword set exported for use in processor.py ───────────────────
-DOMAIN_STOPWORDS: frozenset[str] = _FUNCTION_WORDS | _FRAGMENTS
+DOMAIN_STOPWORDS: frozenset[str] = _FUNCTION_WORDS
 
 # ── English stopwords common in this bilingual dataset ───────────────────────
 _ENGLISH_SW: frozenset[str] = frozenset({

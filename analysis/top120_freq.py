@@ -26,11 +26,6 @@ KNOWN_FUNCTION = {
     "cũng", "vẫn", "lại", "đi", "rồi", "nữa", "thêm", "chỉ", "chưa",
     "không", "của", "như", "nhau", "sự", "điều", "việc",
 }
-KNOWN_FRAGMENTS = {
-    "ty", "ot", "trường", "nghiệp", "viên", "triển", "thiện", "mái",
-    "thoải", "tạo", "trình", "gian", "hỏi", "nghiệm", "lý", "trợ",
-    "hội", "độ", "ràng",
-}
 KNOWN_ENGLISH = {"the", "and", "is", "of", "to", "in", "for", "a", "an",
                  "it", "at", "be", "as", "by", "we", "on", "or", "do"}
 
@@ -59,8 +54,6 @@ def main():
     for rank, (word, count) in enumerate(counter.most_common(TOP_N), 1):
         if word in KNOWN_FUNCTION:
             status = "function-word"
-        elif word in KNOWN_FRAGMENTS:
-            status = "fragment"
         elif word in KNOWN_ENGLISH:
             status = "english-sw"
         else:

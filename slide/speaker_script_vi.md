@@ -37,42 +37,45 @@ Deep dive chọn Software IT vì đây là segment gần đây có sample lớn 
 Slide này so sánh 2024 và 2025 trong Software IT. Salary & Benefits tăng 19.3 điểm phần trăm và Work Environment tăng 18.1 điểm, nghĩa là rủi ro năm 2025 đến từ compensation và team climate chứ không chỉ từ process hay tools.
 
 ## Slide 13 - Representative Company Drilldown
-Bubble chart so sánh các công ty đại diện trong Software IT theo aspect. FPT Software là case quy mô lớn nhưng tích cực, LGEDV có watch point ở Technology & Product, còn BMBSOFT và ALTEK có rủi ro tập trung ở Salary và Work Environment.
+Bubble chart so sánh các công ty đại diện trong Software IT theo aspect. Cách đọc là màu và số trong bong bóng thể hiện negative ratio, còn kích thước bong bóng thể hiện mention volume. Vì vậy bong bóng to màu xanh nghĩa là nhiều người nhắc đến aspect đó, nhưng tỷ lệ negative thấp. FPT Software là case quy mô lớn nhưng tích cực, LGEDV có watch point ở Technology & Product, còn BMBSOFT và ALTEK có rủi ro tập trung ở Salary và Work Environment.
 
 ## Slide 14 - Business Recommendations from Aspect Analysis
 Recommendation chuyển kết quả aspect thành action. Thứ nhất là benchmark compensation và benefit vì Salary & Benefits là pain point mạnh nhất. Thứ hai là review team climate vì Work Environment cũng xấu đi rõ. Thứ ba là dùng watchlist theo segment và company thay vì một action HR chung cho toàn bộ thị trường. Cuối cùng là đặt rule cảnh báo sớm để bắt các spike theo năm trước khi nó thành vấn đề cấu trúc.
 
-## Slide 15 - What Words Drive the Pain Points?
+## Slide 15 - Company Case: BMBSOFT 2025
+Slide này biến recommendation thành một case cụ thể. Trong Software IT, BMBSOFT Vietnam năm 2025 có 39 reviews, 212 aspect mentions, và 61.8% aspect mentions là negative. Chart cho thấy vấn đề tập trung ở Salary & Benefits và Work Environment, cả hai đều khoảng 85% negative. Vì vậy recommendation không phải là một action HR chung: đầu tiên reset pay và benefits communication, sau đó chạy team-climate review ngắn, đồng thời giữ Career Growth như một điểm mạnh để retention.
+
+## Slide 16 - What Words Drive the Pain Points?
 Keyword chart cho biết các từ và matched terms đứng sau sentiment của từng aspect. Điều này giúp chuyển kết quả phân tích thành action cụ thể hơn.
 
-## Slide 16 - Preprocessing Pipeline
+## Slide 17 - Preprocessing Pipeline
 Phần này giới thiệu pipeline preprocessing tiếng Việt trước khi modeling và aspect analysis.
 
-## Slide 17 - Text Preprocessing: 8 Steps
+## Slide 18 - Text Preprocessing: 8 Steps
 Pipeline chuẩn hóa text qua Unicode normalization, lowercase, loại noise, lọc ký tự, chuẩn hóa whitespace, tokenization bằng underthesea, và stopword removal. Các bước này giảm nhiễu do web scraping và giúp model nhận input ổn định hơn.
 
-## Slide 18 - Stopword Categories
-Stopword được tạo từ frequency toàn corpus: đếm token trên toàn dataset, review các từ xuất hiện nhiều nhưng ít giá trị sentiment, rồi chọn lọc stopword tiếng Việt. Bảng bên dưới nhóm các stopword cuối cùng thành function words, conjunctions, prepositions, pronouns, quantifiers và compound fragments.
+## Slide 19 - Stopword Categories
+Stopword được tạo từ frequency toàn corpus: đếm token trên toàn dataset, review các từ xuất hiện nhiều nhưng ít giá trị sentiment, rồi chọn lọc stopword tiếng Việt. Bảng bên dưới nhóm các stopword cuối cùng thành function words, conjunctions, prepositions, pronouns và quantifiers.
 
-## Slide 19 - Modeling Strategy
+## Slide 20 - Modeling Strategy
 Phần này tập trung vào weak label, label quality, neutral handling, và các sentiment model có thể triển khai.
 
-## Slide 20 - The Core Modeling Challenge
+## Slide 21 - The Core Modeling Challenge
 Weak label ban đầu đến từ rating: 1-2 sao là negative, 3 sao là neutral, 4-5 sao là positive, sau đó keyword và ABSA conflict có thể điều chỉnh label. Neutral là class khó vì nó có thể là trung bình, mixed, không chắc chắn, hoặc cảm xúc yếu.
 
-## Slide 21 - Experiment Results: 7 Target Models
+## Slide 22 - Experiment Results: 7 Target Models
 Bảng này so sánh bảy model mục tiêu bằng Accuracy, Macro Recall và Macro F1. Với neutral label, PhoBERT NeutralBoost 0.9 là dòng PhoBERT tốt nhất; ở no-neutral, PhoBERT threshold 0.68 đạt Macro F1 cao nhất là 0.960.
 
-## Slide 22 - Consistent Model Comparison
+## Slide 23 - Consistent Model Comparison
 Chart giữ cùng bảy model mục tiêu và so sánh Macro F1 theo neutral setting. Recommendation thực tế là dùng binary no-neutral cho polarity alert có độ tin cậy cao, và dùng cleaned 3-class khi cần diễn giải neutral cho business analysis.
 
-## Slide 23 - Best Neural Model Convergence
+## Slide 24 - Best Neural Model Convergence
 Convergence chart dùng neural run tốt nhất có lưu history theo epoch. Classical ML như Logistic Regression và Linear SVC không có epoch curve, nên chart này chỉ áp dụng cho neural model.
 
-## Slide 24 - Practical Value of the Topic
+## Slide 25 - Practical Value of the Topic
 Giá trị thực tế là hệ thống chuyển review không cấu trúc thành sentiment, aspect distribution và time trend có thể đo được. Nó cũng hỗ trợ market listening và decision support mà không cần đọc thủ công hàng nghìn review.
 
-## Slide 25 - Summary
+## Slide 26 - Summary
 Summary nhắc lại những gì project đã xây dựng và kết quả chính. Binary polarity F1 cao nhất là 0.960 với PhoBERT threshold 0.68, cleaned 3-class F1 là 0.877, label audit tìm được 1,570 likely issues, và Salary là pain point lớn nhất với 60% negative sentiment.
 
-## Slide 26 - Selected References
+## Slide 27 - Selected References
