@@ -63,9 +63,6 @@
 <!-- SLIDE: Solution Flow Diagram -->
 <section>
   <h2>Flow Architecture</h2>
-  <p style="font-size:0.62em; color:var(--c2); margin:0 0 14px">
-    One abstract pipeline supports all model families: TF-IDF Word+Char, FastText models, PhoBERT, and ABSA.
-  </p>
 
   <style>
     .flow-arrow {
@@ -129,15 +126,15 @@
     </div>
     <div class="flow-arrow" aria-hidden="true"></div>
     <div class="card flow-card" style="border-top:4px solid var(--accent)">
-      <div class="card-title">Data Preparation</div>
+      <div class="card-title">Data Preprocessing</div>
       <p>
         Clean text, normalize Vietnamese, tokenize, create weak labels, and audit noisy labels.
       </p>
     </div>
     <div class="flow-arrow" aria-hidden="true"></div>
     <div class="card flow-card" style="border-top:4px solid var(--c-neu)">
-      <div class="card-title">Text Representation</div>
-      <p>
+      <div class="card-title" style="font-size: 0.9em;">Text Representation</div>
+      <p style="font-size: 0.85em;">
         Convert text into features: TF-IDF Word+Char, FastText vectors, sequence tokens, or transformer inputs.
       </p>
     </div>

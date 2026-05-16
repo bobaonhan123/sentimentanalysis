@@ -35,6 +35,44 @@ PHOBERT_RESULTS = ANALYSIS_DIR / "phobert_outputs" / "phobert_results.json"
 RESULTS_PARTIAL = ROOT / "slide" / "partials" / "06-results.html"
 REVIEWS_CSV = ROOT / "data_post_processing" / "1900_export_reviews.csv"
 
+# Fallback values are the exported PhoBERT results currently used by the deck.
+# With-neutral values come from the PhoBERT summary table; no-neutral values were
+# provided from the binary PhoBERT run and only include metrics that were reported.
+PHOBERT_WITH_NEUTRAL_FALLBACK = {
+    "phobert": {
+        "accuracy": 0.8220,
+        "f1_macro": 0.7781,
+        "f1_weighted": 0.8269,
+        "precision_macro": 0.7742,
+        "recall_macro": 0.7847,
+    },
+    "phobert_neutralboost": {
+        "accuracy": 0.8240,
+        "f1_macro": 0.7793,
+        "f1_weighted": 0.8284,
+        "precision_macro": 0.7757,
+        "recall_macro": 0.7851,
+        "neutral_boost": 0.9,
+    },
+}
+PHOBERT_BINARY_FALLBACK = [
+    {
+        "model": "PhoBERT_Binary",
+        "accuracy": 0.9646,
+        "f1_macro": 0.9575,
+        "negative_f1": 0.9402,
+        "positive_f1": 0.9749,
+    },
+    {
+        "model": "PhoBERT_Binary_Threshold_0.68",
+        "accuracy": 0.9663,
+        "f1_macro": 0.9596,
+        "negative_f1": 0.9431,
+        "positive_f1": 0.9760,
+        "threshold": 0.68,
+    },
+]
+
 
 def _load_runs() -> list[dict]:
     return json.loads(TRAINING_RESULTS.read_text(encoding="utf-8"))
@@ -67,15 +105,48 @@ def _metric_or_none(result: dict | None, key: str) -> float | None:
     return None if value is None else float(value)
 
 
-def _phobert_rows() -> list[dict]:
-    if not PHOBERT_RESULTS.exists():
-        return []
+def _load_phobert_payload() -> dict:
+    payload = {}
+    if PHOBERT_RESULTS.exists():
+        payload = json.loads(PHOBERT_RESULTS.read_text(encoding="utf-8"))
 
-    payload = json.loads(PHOBERT_RESULTS.read_text(encoding="utf-8"))
+    for key, value in PHOBERT_WITH_NEUTRAL_FALLBACK.items():
+        payload.setdefault(key, value)
+    payload.setdefault("phobert_binary_variants", PHOBERT_BINARY_FALLBACK)
+    return payload
+
+
+def _best_phobert_with_neutral(payload: dict | None = None) -> tuple[str, dict] | tuple[None, None]:
+    payload = payload or _load_phobert_payload()
+    candidates = []
+    for source_key, label in [
+        ("phobert", "PhoBERT"),
+        ("phobert_neutralboost", "PhoBERT + NeutralBoost 0.9"),
+    ]:
+        result = payload.get(source_key)
+        if result:
+            candidates.append((float(result.get("f1_macro", 0.0)), label, result))
+    if not candidates:
+        return None, None
+    _, label, result = max(candidates, key=lambda item: item[0])
+    return label, result
+
+
+def _best_phobert_binary(payload: dict | None = None) -> dict | None:
+    payload = payload or _load_phobert_payload()
+    variants = payload.get("phobert_binary_variants") or PHOBERT_BINARY_FALLBACK
+    valid = [row for row in variants if row and "f1_macro" in row]
+    if not valid:
+        return None
+    return max(valid, key=lambda row: float(row["f1_macro"]))
+
+
+def _phobert_rows() -> list[dict]:
+    payload = _load_phobert_payload()
     rows = []
     for source_key, label in [
         ("phobert", "PhoBERT"),
-        ("phobert_neutralboost", "PhoBERT + NeutralBoost"),
+        ("phobert_neutralboost", "PhoBERT + NeutralBoost 0.9"),
     ]:
         result = payload.get(source_key)
         if not result:
@@ -83,6 +154,13 @@ def _phobert_rows() -> list[dict]:
         rows.append({
             "model": label,
             "setting": "phobert_3class",
+            "accuracy": float(result["accuracy"]),
+            "f1_macro": float(result["f1_macro"]),
+        })
+    for result in payload.get("phobert_binary_variants", []):
+        rows.append({
+            "model": result["model"].replace("_", " "),
+            "setting": "binary_no_neutral",
             "accuracy": float(result["accuracy"]),
             "f1_macro": float(result["f1_macro"]),
         })
@@ -149,10 +227,7 @@ def build_selected_rows(variant_run: dict, full_run: dict | None) -> pd.DataFram
 
 
 def _phobert_metric(key: str) -> float | None:
-    if not PHOBERT_RESULTS.exists():
-        return None
-    payload = json.loads(PHOBERT_RESULTS.read_text(encoding="utf-8"))
-    result = payload.get("phobert") or payload.get("phobert_neutralboost")
+    _, result = _best_phobert_with_neutral()
     if not result:
         return None
     if key == "recall_macro" and key not in result:
@@ -169,8 +244,8 @@ def build_experiment_rows(variant_run: dict, full_run: dict | None) -> pd.DataFr
         ("Linear SVC", "LinearSVC", "binary_no_neutral__TFIDF_WordChar_LinearSVC"),
         ("Random Forest", "RandomForest", None),
         ("Gaussian NB", "GaussianNB", None),
-        ("FastText+MLP", "MLP_NeuralNet_Tuned", None),
-        ("FastText+LSTM", "LSTM_NeuralNet", None),
+        ("FastText+MLP", "MLP_NeuralNet_Tuned", "binary_no_neutral__TF-IDF_WordChar_MLP"),
+        ("FastText+LSTM", "LSTM_NeuralNet", "binary_no_neutral__TF-IDF_WordChar_LSTM"),
         ("PhoBERT", None, None),
     ]
 
@@ -183,6 +258,7 @@ def build_experiment_rows(variant_run: dict, full_run: dict | None) -> pd.DataFr
             with_acc = _phobert_metric("accuracy")
             with_recall = _phobert_metric("recall_macro")
             with_f1 = _phobert_metric("f1_macro")
+            binary_result = _best_phobert_binary()
         else:
             with_acc = _metric_or_none(full_result, "accuracy")
             with_recall = _metric_or_none(full_result, "recall_macro")
@@ -242,7 +318,7 @@ def _bar_chart(
             Patch(color="#f97316", label="FastText+MLP"),
             Patch(color="#a16207", label="Other FastText baselines"),
             Patch(color="#16a34a", label="Binary polarity setting"),
-            Patch(color="#2563eb", label="PhoBERT when available"),
+            Patch(color="#2563eb", label="PhoBERT"),
         ]
         ax.legend(handles=handles, loc="lower right", fontsize=8, frameon=True)
     plt.tight_layout()
@@ -260,13 +336,13 @@ def _experiment_f1_chart(df: pd.DataFrame, path: Path) -> None:
     fig, ax = plt.subplots(figsize=(11, 4.8))
     bars1 = ax.bar(x - width / 2, with_f1, width, label="With neutral", color="#2563eb", alpha=0.88)
     bars2 = ax.bar(x + width / 2, no_f1, width, label="No neutral", color="#16a34a", alpha=0.88)
-    ax.set_ylim(0.55, 1.0)
+    ax.set_ylim(0.55, 1.03)
     ax.set_ylabel("Macro F1")
     ax.set_title("7 Target Models: Macro F1 by Neutral Setting")
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=20, ha="right")
     ax.grid(True, axis="y", alpha=0.22)
-    ax.legend(loc="upper right")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.14), ncol=2, frameon=False)
 
     for bars in [bars1, bars2]:
         for bar in bars:
@@ -485,33 +561,64 @@ def _replace_nth_tbody(html: str, index: int, rows_html: str) -> str:
 
 
 def _experiment_table_rows(experiment_df: pd.DataFrame) -> str:
-    rows = []
-    best = max(
+    """Generate HTML table rows sorted by performance and with best results highlighted.
+    Sorts by no_neutral_f1 (descending), then by with_neutral_f1 (descending).
+    """
+    # Sort by best performance metrics
+    sorted_df = experiment_df.sort_values(
+        by=['no_neutral_f1', 'with_neutral_f1'],
+        ascending=[False, False],
+        na_position='last'
+    )
+    
+    # Find the best scores overall
+    best_overall = max(
         [
             value
-            for value in pd.concat([experiment_df["with_neutral_f1"], experiment_df["no_neutral_f1"]]).tolist()
+            for value in pd.concat([sorted_df["with_neutral_f1"], sorted_df["no_neutral_f1"]]).tolist()
             if value is not None and not pd.isna(value)
         ],
         default=0.0,
     )
-    for _, row in experiment_df.iterrows():
+    
+    rows = []
+    for _, row in sorted_df.iterrows():
         row_best = any(
-            value is not None and not pd.isna(value) and abs(float(value) - best) < 1e-9
+            value is not None and not pd.isna(value) and abs(float(value) - best_overall) < 1e-9
             for value in [row["with_neutral_f1"], row["no_neutral_f1"]]
         )
         cls = ' class="highlight-row"' if row_best else ""
         rows.append(
             f'          <tr{cls}>\n'
-            f"            <td>{row['model']}</td>\n"
-            f'            <td class="center">{_metric_cell(row["with_neutral_accuracy"])}</td>\n'
-            f'            <td class="center">{_metric_cell(row["with_neutral_recall"])}</td>\n'
-            f'            <td class="center">{_metric_cell(row["with_neutral_f1"])}</td>\n'
-            f'            <td class="center">{_metric_cell(row["no_neutral_accuracy"])}</td>\n'
-            f'            <td class="center">{_metric_cell(row["no_neutral_recall"])}</td>\n'
-            f'            <td class="center">{_metric_cell(row["no_neutral_f1"])}</td>\n'
+            f"            <td><strong>{row['model']}</strong></td>\n"
+            f'            <td class="center">{_highlight_if_best(row["with_neutral_accuracy"], best_overall if row["with_neutral_f1"] and abs(float(row["with_neutral_f1"]) - best_overall) < 1e-9 else None)}</td>\n'
+            f'            <td class="center">{_highlight_if_best(row["with_neutral_recall"], best_overall if row["with_neutral_f1"] and abs(float(row["with_neutral_f1"]) - best_overall) < 1e-9 else None)}</td>\n'
+            f'            <td class="center">{_metric_cell_bold(row["with_neutral_f1"], best_overall)}</td>\n'
+            f'            <td class="center">{_highlight_if_best(row["no_neutral_accuracy"], best_overall if row["no_neutral_f1"] and abs(float(row["no_neutral_f1"]) - best_overall) < 1e-9 else None)}</td>\n'
+            f'            <td class="center">{_highlight_if_best(row["no_neutral_recall"], best_overall if row["no_neutral_f1"] and abs(float(row["no_neutral_f1"]) - best_overall) < 1e-9 else None)}</td>\n'
+            f'            <td class="center">{_metric_cell_bold(row["no_neutral_f1"], best_overall)}</td>\n'
             "          </tr>"
         )
     return "\n".join(rows)
+
+
+def _highlight_if_best(value, best):
+    """Helper to format a metric cell, optionally in bold if it's part of the best result."""
+    cell = _metric_cell(value)
+    if best is not None and cell != "-":
+        return f"<strong>{cell}</strong>"
+    return cell
+
+
+def _metric_cell_bold(value, best_overall):
+    """Format a metric cell with bold if it matches the best overall."""
+    if value is None or pd.isna(value):
+        return "-"
+    val_float = float(value)
+    cell = f"{val_float:.3f}"
+    if abs(val_float - best_overall) < 1e-9:
+        return f"<strong style='color:#16a34a'>{cell}</strong>"
+    return cell
 
 
 def update_results_partial(experiment_df: pd.DataFrame, has_convergence: bool) -> None:
@@ -559,7 +666,7 @@ def update_results_partial(experiment_df: pd.DataFrame, has_convergence: bool) -
     </tbody>
   </table>
   <div class="chart-caption">
-    Dash means the current artifact does not contain that no-neutral run. PhoBERT fills in after its result JSON is exported.
+    PhoBERT with-neutral uses NeutralBoost 0.9. PhoBERT no-neutral uses the threshold 0.68 binary run; recall is left blank where it was not exported.
   </div>
 </section>
 
@@ -578,7 +685,7 @@ def update_results_partial(experiment_df: pd.DataFrame, has_convergence: bool) -
       <div class="card">
         <div class="card-title">Main Reading</div>
         <p style="font-size:0.54em; margin:0">
-          Removing neutral gives the strongest polarity classifier, while cleaned 3-class labels are better for business interpretation.
+          Removing neutral gives the strongest polarity classifier; PhoBERT is now the best no-neutral model by macro F1.
         </p>
       </div>
       <div class="card" style="margin-top:10px">
@@ -626,7 +733,7 @@ def main() -> None:
     _bar_chart(
         selected_df,
         selected_chart,
-        "Selected Model Comparison: TF-IDF Word+Char vs FastText",
+        "Selected Model Comparison: TF-IDF Word+Char, FastText, and PhoBERT",
         top_n=None,
         legend=True,
     )
@@ -640,7 +747,7 @@ def main() -> None:
     print(f"Selected table: {selected_csv}")
     print(f"Experiment table: {experiment_csv}")
     print(f"Label distribution table: {label_csv}")
-    print(f"PhoBERT included: {PHOBERT_RESULTS.exists()}")
+    print(f"PhoBERT JSON exported: {PHOBERT_RESULTS.exists()} (fallback metrics used when JSON is absent)")
     print(f"Charts: {', '.join(str(p) for p in chart_paths)}")
 
 

@@ -21,17 +21,17 @@
       </tr>
     </thead>
     <tbody>
-          <tr>
-            <td>Logistic Regression</td>
-            <td class="center">0.752</td>
-            <td class="center">0.699</td>
-            <td class="center">0.692</td>
-            <td class="center">0.931</td>
-            <td class="center">0.919</td>
-            <td class="center">0.917</td>
-          </tr>
           <tr class="highlight-row">
-            <td>Linear SVC</td>
+            <td><strong>PhoBERT</strong></td>
+            <td class="center">0.824</td>
+            <td class="center">0.785</td>
+            <td class="center">0.779</td>
+            <td class="center"><strong>0.966</strong></td>
+            <td class="center">-</td>
+            <td class="center"><strong style='color:#16a34a'>0.960</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Linear SVC</strong></td>
             <td class="center">0.765</td>
             <td class="center">0.705</td>
             <td class="center">0.696</td>
@@ -40,16 +40,34 @@
             <td class="center">0.918</td>
           </tr>
           <tr>
-            <td>Random Forest</td>
-            <td class="center">0.762</td>
-            <td class="center">0.624</td>
-            <td class="center">0.648</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
+            <td><strong>FastText+LSTM</strong></td>
+            <td class="center">0.753</td>
+            <td class="center">0.714</td>
+            <td class="center">0.700</td>
+            <td class="center">0.933</td>
+            <td class="center">0.913</td>
+            <td class="center">0.918</td>
           </tr>
           <tr>
-            <td>Gaussian NB</td>
+            <td><strong>Logistic Regression</strong></td>
+            <td class="center">0.752</td>
+            <td class="center">0.699</td>
+            <td class="center">0.692</td>
+            <td class="center">0.931</td>
+            <td class="center">0.919</td>
+            <td class="center">0.917</td>
+          </tr>
+          <tr>
+            <td><strong>FastText+MLP</strong></td>
+            <td class="center">0.797</td>
+            <td class="center">0.724</td>
+            <td class="center">0.728</td>
+            <td class="center">0.916</td>
+            <td class="center">0.892</td>
+            <td class="center">0.897</td>
+          </tr>
+          <tr>
+            <td><strong>Gaussian NB</strong></td>
             <td class="center">0.705</td>
             <td class="center">0.662</td>
             <td class="center">0.650</td>
@@ -58,28 +76,10 @@
             <td class="center">-</td>
           </tr>
           <tr>
-            <td>FastText+MLP</td>
-            <td class="center">0.797</td>
-            <td class="center">0.724</td>
-            <td class="center">0.728</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-          </tr>
-          <tr>
-            <td>FastText+LSTM</td>
-            <td class="center">0.753</td>
-            <td class="center">0.714</td>
-            <td class="center">0.700</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-          </tr>
-          <tr>
-            <td>PhoBERT</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
+            <td><strong>Random Forest</strong></td>
+            <td class="center">0.762</td>
+            <td class="center">0.624</td>
+            <td class="center">0.648</td>
             <td class="center">-</td>
             <td class="center">-</td>
             <td class="center">-</td>
@@ -87,7 +87,7 @@
     </tbody>
   </table>
   <div class="chart-caption">
-    Dash means the current artifact does not contain that no-neutral run. PhoBERT fills in after its result JSON is exported.
+    PhoBERT with-neutral uses NeutralBoost 0.9. PhoBERT no-neutral uses the threshold 0.68 binary run; recall is left blank where it was not exported.
   </div>
 </section>
 
@@ -106,7 +106,7 @@
       <div class="card">
         <div class="card-title">Main Reading</div>
         <p style="font-size:0.54em; margin:0">
-          Removing neutral gives the strongest polarity classifier, while cleaned 3-class labels are better for business interpretation.
+          Removing neutral gives the strongest polarity classifier; PhoBERT is now the best no-neutral model by macro F1.
         </p>
       </div>
       <div class="card" style="margin-top:10px">

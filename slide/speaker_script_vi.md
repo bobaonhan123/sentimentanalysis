@@ -27,56 +27,52 @@ Phần này chuyển từ dataset và sentiment output sang phân tích aspect c
 ## Slide 9 - Aspect Sentiment Overview
 Chart tổng hợp sentiment theo từng workplace aspect. Salary & Benefits là điểm negative rõ nhất, còn Work Environment có volume thảo luận lớn nhất.
 
-## Slide 10 - Critical Issues by Business Priority
-Salary & Benefits và Work Environment được đưa vào P1 vì có negative volume và negative ratio cao. Facilities & Tools là P2 vì có mức tăng negative ratio lớn nhất.
-
-## Slide 11 - Which Issues Are Getting Worse?
-Trend chart tập trung vào các aspect đang xấu đi. Watchlist gồm Facilities & Tools, Work Environment, và Work-Life Balance.
-
-## Slide 12 - Where Negative Signals Concentrate
+## Slide 10 - Where Negative Signals Concentrate
 Heatmap cho thấy negative signal tập trung theo industry và company-volume group. Cách nhìn này cụ thể hơn so với chỉ xem tổng quan toàn bộ dataset.
 
-## Slide 13 - What Words Drive the Pain Points?
+## Slide 11 - Industry Deep Dive: Software IT
+Deep dive chọn Software IT vì đây là segment gần đây có sample lớn nhất, gồm 2,306 reviews và 8,941 aspect mentions từ 2023 đến 2026 YTD. Mixed chart cho thấy negative ratio tăng từ 22.0% năm 2023 lên 55.3% năm 2025; riêng 2026 YTD chỉ nên xem là tín hiệu sớm vì chưa đủ cả năm.
+
+## Slide 12 - Year-over-Year Aspect Movement
+Slide này so sánh 2024 và 2025 trong Software IT. Salary & Benefits tăng 19.3 điểm phần trăm và Work Environment tăng 18.1 điểm, nghĩa là rủi ro năm 2025 đến từ compensation và team climate chứ không chỉ từ process hay tools.
+
+## Slide 13 - Representative Company Drilldown
+Bubble chart so sánh các công ty đại diện trong Software IT theo aspect. FPT Software là case quy mô lớn nhưng tích cực, LGEDV có watch point ở Technology & Product, còn BMBSOFT và ALTEK có rủi ro tập trung ở Salary và Work Environment.
+
+## Slide 14 - Business Recommendations from Aspect Analysis
+Recommendation chuyển kết quả aspect thành action. Thứ nhất là benchmark compensation và benefit vì Salary & Benefits là pain point mạnh nhất. Thứ hai là review team climate vì Work Environment cũng xấu đi rõ. Thứ ba là dùng watchlist theo segment và company thay vì một action HR chung cho toàn bộ thị trường. Cuối cùng là đặt rule cảnh báo sớm để bắt các spike theo năm trước khi nó thành vấn đề cấu trúc.
+
+## Slide 15 - What Words Drive the Pain Points?
 Keyword chart cho biết các từ và matched terms đứng sau sentiment của từng aspect. Điều này giúp chuyển kết quả phân tích thành action cụ thể hơn.
 
-## Slide 14 - Key Business Findings
-Slide này có bốn kết luận chính: Salary & Benefits là pain point lớn nhất, Work Environment gây phân cực, Facilities & Tools là rủi ro đang tăng, và dashboard hỗ trợ ưu tiên hành động.
-
-## Slide 15 - Preprocessing Pipeline
+## Slide 16 - Preprocessing Pipeline
 Phần này giới thiệu pipeline preprocessing tiếng Việt trước khi modeling và aspect analysis.
 
-## Slide 16 - Text Preprocessing: 8 Steps
+## Slide 17 - Text Preprocessing: 8 Steps
 Pipeline chuẩn hóa text qua Unicode normalization, lowercase, loại noise, lọc ký tự, chuẩn hóa whitespace, tokenization bằng underthesea, và stopword removal. Các bước này giảm nhiễu do web scraping và giúp model nhận input ổn định hơn.
 
-## Slide 17 - Stopword Categories
+## Slide 18 - Stopword Categories
 Stopword được tạo từ frequency toàn corpus: đếm token trên toàn dataset, review các từ xuất hiện nhiều nhưng ít giá trị sentiment, rồi chọn lọc stopword tiếng Việt. Bảng bên dưới nhóm các stopword cuối cùng thành function words, conjunctions, prepositions, pronouns, quantifiers và compound fragments.
 
-## Slide 18 - Modeling Strategy
+## Slide 19 - Modeling Strategy
 Phần này tập trung vào weak label, label quality, neutral handling, và các sentiment model có thể triển khai.
 
-## Slide 19 - The Core Modeling Challenge
+## Slide 20 - The Core Modeling Challenge
 Weak label ban đầu đến từ rating: 1-2 sao là negative, 3 sao là neutral, 4-5 sao là positive, sau đó keyword và ABSA conflict có thể điều chỉnh label. Neutral là class khó vì nó có thể là trung bình, mixed, không chắc chắn, hoặc cảm xúc yếu.
 
-## Slide 20 - Experiment Design
-Project test bốn phiên bản: original 3-class, cleaned 3-class, binary no-neutral, và mixed-conflict 4-class. Thiết kế này giúp tách ảnh hưởng của label quality, neutral handling và model family.
+## Slide 21 - Experiment Results: 7 Target Models
+Bảng này so sánh bảy model mục tiêu bằng Accuracy, Macro Recall và Macro F1. Với neutral label, PhoBERT NeutralBoost 0.9 là dòng PhoBERT tốt nhất; ở no-neutral, PhoBERT threshold 0.68 đạt Macro F1 cao nhất là 0.960.
 
-## Slide 21 - Confident Learning
-Confident learning được dùng để audit label quality. Phương pháp train out-of-fold probabilistic models, ước lượng label không hợp lý, và xuất các dòng đáng nghi; trong dataset này có 1,570 likely label issues.
-
-## Slide 22 - Experiment Results: 7 Target Models
-Bảng này so sánh bảy model mục tiêu bằng Accuracy, Macro Recall và Macro F1. Với neutral label, FastText+MLP là neural baseline mạnh nhất, nhưng no-neutral Linear SVC cho F1 cao nhất là 0.918.
-
-## Slide 23 - Consistent Model Comparison
+## Slide 22 - Consistent Model Comparison
 Chart giữ cùng bảy model mục tiêu và so sánh Macro F1 theo neutral setting. Recommendation thực tế là dùng binary no-neutral cho polarity alert có độ tin cậy cao, và dùng cleaned 3-class khi cần diễn giải neutral cho business analysis.
 
-## Slide 24 - Best Neural Model Convergence
+## Slide 23 - Best Neural Model Convergence
 Convergence chart dùng neural run tốt nhất có lưu history theo epoch. Classical ML như Logistic Regression và Linear SVC không có epoch curve, nên chart này chỉ áp dụng cho neural model.
 
-## Slide 25 - Practical Value of the Topic
+## Slide 24 - Practical Value of the Topic
 Giá trị thực tế là hệ thống chuyển review không cấu trúc thành sentiment, aspect distribution và time trend có thể đo được. Nó cũng hỗ trợ market listening và decision support mà không cần đọc thủ công hàng nghìn review.
 
-## Slide 26 - Summary
-Summary nhắc lại những gì project đã xây dựng và kết quả chính. Binary polarity F1 cao nhất là 0.918, cleaned 3-class F1 là 0.877, label audit tìm được 1,570 likely issues, và Salary là pain point lớn nhất với 60% negative sentiment.
+## Slide 25 - Summary
+Summary nhắc lại những gì project đã xây dựng và kết quả chính. Binary polarity F1 cao nhất là 0.960 với PhoBERT threshold 0.68, cleaned 3-class F1 là 0.877, label audit tìm được 1,570 likely issues, và Salary là pain point lớn nhất với 60% negative sentiment.
 
-## Slide 27 - Selected References
-Slide cuối liệt kê các tài liệu tham khảo chính, gồm báo cáo workforce engagement, benchmark sentiment analysis, và confident learning cho label quality.
+## Slide 26 - Selected References

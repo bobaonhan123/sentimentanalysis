@@ -30,6 +30,8 @@ from sklearn.metrics import (
 from sklearn.model_selection import StratifiedKFold, cross_val_predict, train_test_split
 from sklearn.pipeline import FeatureUnion, Pipeline
 from sklearn.svm import LinearSVC
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
 
 from src.preprocessing.processor import preprocess
 from src.training.experiment import save_experiment
@@ -47,7 +49,16 @@ MIXED_LABEL = 3
 MIXED_LABEL_NAMES = {**LABEL_NAMES, MIXED_LABEL: "mixed_conflict"}
 BINARY_LABEL_NAMES = {0: "negative", 2: "positive"}
 
-
+# Try to import keras for LSTM models
+try:
+    import tensorflow as tf
+    from tensorflow.keras import Sequential
+    from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
+    from tensorflow.keras.optimizers import Adam
+    KERAS_AVAILABLE = True
+except ImportError:
+    KERAS_AVAILABLE = False
+    logger.warning("TensorFlow/Keras not available; LSTM training will be skipped.")
 def _evaluate(y_true, y_pred, label_names: dict[int, str]) -> dict:
     labels = sorted(set(y_true) | set(y_pred))
     target_names = [label_names.get(int(label), str(label)) for label in labels]
@@ -105,7 +116,23 @@ def _text_model(kind: str = "logreg") -> Pipeline:
             LinearSVC(max_iter=3000, class_weight="balanced", random_state=42, C=0.8),
             cv=3,
         )
-    else:
+    elif kind == "mlp":
+        clf = Pipeline([
+            ("scaler", StandardScaler(with_mean=False)),
+            ("mlp", MLPClassifier(
+                hidden_layer_sizes=(256, 128, 64),
+                activation="relu",
+                solver="adam",
+                max_iter=300,
+                batch_size=32,
+                learning_rate_init=0.001,
+                random_state=42,
+                early_stopping=True,
+                validation_fraction=0.2,
+                n_iter_no_change=15,
+            ))
+        ])
+    else:  # logreg
         clf = LogisticRegression(
             max_iter=2000,
             class_weight="balanced",
@@ -114,6 +141,144 @@ def _text_model(kind: str = "logreg") -> Pipeline:
             solver="lbfgs",
         )
     return Pipeline([("features", features), ("clf", clf)])
+
+
+def _train_mlp_on_variant(name: str, df: pd.DataFrame, label_names: dict[int, str], X_tfidf: np.ndarray, y: np.ndarray) -> dict | None:
+    """Train MLP classifier specifically on binary_no_neutral variant."""
+    try:
+        logger.info("Training MLP on variant: %s", name)
+        y_train, y_val, y_test = y[:len(df)//3], y[len(df)//3:2*len(df)//3], y[2*len(df)//3:]
+        X_train, X_val, X_test = X_tfidf[:len(df)//3], X_tfidf[len(df)//3:2*len(df)//3], X_tfidf[2*len(df)//3:]
+        
+        scaler = StandardScaler(with_mean=False)
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_val_scaled = scaler.transform(X_val)
+        X_test_scaled = scaler.transform(X_test)
+        
+        mlp = MLPClassifier(
+            hidden_layer_sizes=(256, 128, 64),
+            activation="relu",
+            solver="adam",
+            max_iter=300,
+            batch_size=32,
+            learning_rate_init=0.001,
+            random_state=42,
+            early_stopping=True,
+            validation_fraction=0.2,
+            n_iter_no_change=15,
+        )
+        mlp.fit(X_train_scaled, y_train)
+        
+        y_pred_test = mlp.predict(X_test_scaled)
+        test_metrics = _evaluate(y_test, y_pred_test, label_names)
+        
+        model_name = f"{name}__TF-IDF_WordChar_MLP"
+        logger.info("  %s: acc=%s f1=%s", model_name, test_metrics["accuracy"], test_metrics["f1_macro"])
+        
+        return {
+            model_name: {
+                "type": "variant_text_ngram_mlp",
+                "variant": name,
+                "features": "tfidf_word_char_ngrams",
+                "balance": "class_weight",
+                "label_names": {str(k): v for k, v in label_names.items()},
+                "test": test_metrics,
+                "f1_macro": test_metrics["f1_macro"],
+                "accuracy": test_metrics["accuracy"],
+            }
+        }
+    except Exception as exc:
+        logger.exception("MLP training failed: %s", str(exc))
+        return None
+
+
+def _train_lstm_tokenizer_on_variant(name: str, texts: list[str], max_vocab: int = 10000, max_len: int = 100) -> tuple[dict, np.ndarray] | None:
+    """Prepare tokenized sequences for LSTM training."""
+    if not KERAS_AVAILABLE:
+        return None
+    
+    try:
+        from tensorflow.keras.preprocessing.text import Tokenizer
+        from tensorflow.keras.preprocessing.sequence import pad_sequences
+        
+        tokenizer = Tokenizer(num_words=max_vocab, oov_token="<OOV>")
+        tokenizer.fit_on_texts(texts)
+        sequences = tokenizer.texts_to_sequences(texts)
+        padded = pad_sequences(sequences, maxlen=max_len, padding="post", truncating="post")
+        
+        return {
+            "tokenizer": tokenizer,
+            "vocab_size": min(len(tokenizer.word_index) + 1, max_vocab),
+            "max_len": max_len,
+        }, padded
+    except Exception as exc:
+        logger.exception("LSTM tokenization failed: %s", str(exc))
+        return None
+
+
+def _train_lstm_on_variant(name: str, df: pd.DataFrame, label_names: dict[int, str], X_seq: np.ndarray, y: np.ndarray) -> dict | None:
+    """Train LSTM classifier on binary_no_neutral variant."""
+    if not KERAS_AVAILABLE:
+        logger.info("Skipping LSTM training (Keras not available)")
+        return None
+    
+    try:
+        logger.info("Training LSTM on variant: %s", name)
+        
+        # Split data
+        indices = np.arange(len(X_seq))
+        np.random.shuffle(indices)
+        train_idx = indices[:int(0.7*len(indices))]
+        val_idx = indices[int(0.7*len(indices)):int(0.85*len(indices))]
+        test_idx = indices[int(0.85*len(indices)):]
+        
+        X_train, y_train = X_seq[train_idx], y[train_idx]
+        X_val, y_val = X_seq[val_idx], y[val_idx]
+        X_test, y_test = X_seq[test_idx], y[test_idx]
+        
+        vocab_size = int(np.max(X_seq)) + 1
+        embedding_dim = 64
+        
+        model = Sequential([
+            Embedding(vocab_size, embedding_dim, input_length=X_train.shape[1]),
+            LSTM(128, dropout=0.2, recurrent_dropout=0.2),
+            Dense(64, activation="relu"),
+            Dropout(0.3),
+            Dense(32, activation="relu"),
+            Dense(1, activation="sigmoid"),
+        ])
+        
+        model.compile(optimizer=Adam(learning_rate=0.001), loss="binary_crossentropy", metrics=["accuracy"])
+        model.fit(X_train, y_train, epochs=15, batch_size=32, validation_data=(X_val, y_val), verbose=0)
+        
+        y_pred_probs = model.predict(X_test, verbose=0)
+        y_pred = (y_pred_probs > 0.5).astype(int).flatten()
+        
+        # Map predictions back to original labels
+        label_list = sorted(label_names.keys())
+        y_pred_mapped = np.array([label_list[int(p)] for p in y_pred])
+        y_test_mapped = np.array([label_list[int(t)] for t in y_test])
+        
+        test_metrics = _evaluate(y_test_mapped, y_pred_mapped, label_names)
+        
+        model_name = f"{name}__TF-IDF_WordChar_LSTM"
+        logger.info("  %s: acc=%s f1=%s", model_name, test_metrics["accuracy"], test_metrics["f1_macro"])
+        
+        return {
+            model_name: {
+                "type": "variant_text_ngram_lstm",
+                "variant": name,
+                "features": "lstm_embeddings",
+                "balance": "class_weight",
+                "label_names": {str(k): v for k, v in label_names.items()},
+                "test": test_metrics,
+                "f1_macro": test_metrics["f1_macro"],
+                "accuracy": test_metrics["accuracy"],
+            }
+        }
+    except Exception as exc:
+        logger.exception("LSTM training failed: %s", str(exc))
+        return None
 
 
 def _prepare_base_df(csv_path: str | None) -> pd.DataFrame:
@@ -207,9 +372,12 @@ def _train_one_variant(name: str, df: pd.DataFrame, label_names: dict[int, str])
     y_train = df_train["sentiment"].to_numpy()
     y_val = df_val["sentiment"].to_numpy()
     y_test = df_test["sentiment"].to_numpy()
+    y_all = df["sentiment"].to_numpy()
 
     results = {}
     trained = {}
+    
+    # Standard models: TF-IDF + LogReg and TF-IDF + LinearSVC
     for model_name, model in {
         "TFIDF_WordChar_LogisticRegression": _text_model("logreg"),
         "TFIDF_WordChar_LinearSVC": _text_model("svc"),
@@ -235,6 +403,39 @@ def _train_one_variant(name: str, df: pd.DataFrame, label_names: dict[int, str])
         except Exception as exc:
             logger.exception("  %s failed", full_name)
             results[full_name] = {"type": "variant_text_ngram", "variant": name, "error": str(exc)}
+    
+    # For binary_no_neutral variant, also train MLP models
+    if name == "binary_no_neutral" and len(df) > 100:
+        logger.info("Training MLP models for binary classification...")
+        
+        # Build TF-IDF features for the entire dataset
+        vectorizer = FeatureUnion([
+            ("word", TfidfVectorizer(
+                analyzer="word",
+                ngram_range=(1, 2),
+                min_df=2,
+                max_df=0.95,
+                max_features=70000,
+                sublinear_tf=True,
+            )),
+            ("char", TfidfVectorizer(
+                analyzer="char_wb",
+                ngram_range=(3, 5),
+                min_df=2,
+                max_df=0.95,
+                max_features=70000,
+                sublinear_tf=True,
+            )),
+        ])
+        
+        try:
+            X_tfidf = vectorizer.fit_transform(df["text_clean"].to_numpy())
+            mlp_results = _train_mlp_on_variant(name, df, label_names, X_tfidf.toarray(), y_all)
+            if mlp_results:
+                results.update(mlp_results)
+                trained.update({k: None for k in mlp_results.keys()})  # Save model separately
+        except Exception as exc:
+            logger.exception("MLP training failed: %s", str(exc))
 
     valid = {k: v for k, v in results.items() if "error" not in v}
     if not valid:
@@ -248,7 +449,7 @@ def _train_one_variant(name: str, df: pd.DataFrame, label_names: dict[int, str])
         "models": results,
         "best_name": best_name,
         "best_result": valid[best_name],
-        "best_model": trained[best_name],
+        "best_model": trained[best_name] if best_name in trained else None,
         "label_names": label_names,
     }
 

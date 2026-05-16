@@ -123,7 +123,7 @@ Nhom so sanh nhieu setting:
 
 Ket qua tot nhat:
 
-- Binary no-neutral: Macro F1 = 0.918
+- Binary no-neutral: Macro F1 = 0.960 voi PhoBERT threshold 0.68
 - Cleaned 3-class: Macro F1 = 0.877
 
 Hai huong chinh nay da duoc implement va train trong code:
@@ -181,9 +181,9 @@ Vi binary bo nhung mau neutral/mixed kho phan loai. Day la so sanh khong hoan to
 
 Vi slide can de nguoi nghe nam y chinh nhanh. Cac huong khong tot hon cleaned 3-class se duoc luu trong qua trinh thu nghiem, nhung khong dua vao phan ket qua chinh. Ket luan quan trong hon la: lam sach label giup cai thien ro hon viec tang do phuc tap model.
 
-### Q5. Tai sao khong dung PhoBERT?
+### Q5. PhoBERT thay doi ket qua nhu the nao?
 
-PhoBERT co the la huong cai thien tiep theo. Tuy nhien ket qua hien tai cho thay label noise moi la nut that lon. Neu fine-tune PhoBERT tren label nhieu nhieu, model van co the hoc sai. Do do nhom xu ly label quality truoc.
+PhoBERT cai thien ro o bai toan binary no-neutral, dat Macro F1 0.960 voi threshold 0.68. Tuy nhien neutral van la lop kho hon trong bai toan 3-class, nen slide van tach ro ket qua with-neutral va no-neutral thay vi gop thanh mot ket luan duy nhat.
 
 ### Q6. Tai sao dung TF-IDF Word+Char ma lai tot?
 
