@@ -2,20 +2,22 @@
 <section>
   <h2>Experiment Results: 7 Target Models</h2>
   <p style="font-size: 0.6em; color: var(--c2); margin-bottom: 8px">
-    Same evaluation focus: Accuracy, Macro Recall, and Macro F1. Best deployable polarity result is highlighted.
+    Same evaluation focus: Accuracy, Macro Precision, Macro Recall, and Macro F1. Best deployable polarity result is highlighted.
   </p>
-  <table style="font-size:0.38em">
+  <table style="font-size:0.34em">
     <thead>
       <tr>
         <th rowspan="2">Model</th>
-        <th colspan="3" class="center">With neutral label</th>
-        <th colspan="3" class="center">No neutral label</th>
+        <th colspan="4" class="center">With neutral label</th>
+        <th colspan="4" class="center">No neutral label</th>
       </tr>
       <tr>
         <th class="center">Acc.</th>
+        <th class="center">Prec.</th>
         <th class="center">Recall</th>
         <th class="center">F1</th>
         <th class="center">Acc.</th>
+        <th class="center">Prec.</th>
         <th class="center">Recall</th>
         <th class="center">F1</th>
       </tr>
@@ -24,53 +26,65 @@
           <tr class="highlight-row">
             <td><strong>PhoBERT</strong></td>
             <td class="center">0.824</td>
+            <td class="center">0.776</td>
             <td class="center">0.785</td>
             <td class="center">0.779</td>
             <td class="center"><strong>0.966</strong></td>
-            <td class="center">-</td>
+            <td class="center"><strong>0.959</strong></td>
+            <td class="center"><strong>0.961</strong></td>
             <td class="center"><strong style='color:#16a34a'>0.960</strong></td>
           </tr>
           <tr>
             <td><strong>Linear SVC</strong></td>
             <td class="center">0.765</td>
+            <td class="center">0.690</td>
             <td class="center">0.705</td>
             <td class="center">0.696</td>
             <td class="center">0.932</td>
+            <td class="center">0.919</td>
             <td class="center">0.918</td>
             <td class="center">0.918</td>
           </tr>
           <tr>
             <td><strong>FastText+LSTM</strong></td>
             <td class="center">0.753</td>
+            <td class="center">0.691</td>
             <td class="center">0.714</td>
             <td class="center">0.700</td>
             <td class="center">0.933</td>
+            <td class="center">0.923</td>
             <td class="center">0.913</td>
             <td class="center">0.918</td>
           </tr>
           <tr>
             <td><strong>Logistic Regression</strong></td>
             <td class="center">0.752</td>
+            <td class="center">0.688</td>
             <td class="center">0.699</td>
             <td class="center">0.692</td>
             <td class="center">0.931</td>
+            <td class="center">0.915</td>
             <td class="center">0.919</td>
             <td class="center">0.917</td>
           </tr>
           <tr>
             <td><strong>FastText+MLP</strong></td>
             <td class="center">0.797</td>
+            <td class="center">0.732</td>
             <td class="center">0.724</td>
             <td class="center">0.728</td>
             <td class="center">0.916</td>
+            <td class="center">0.903</td>
             <td class="center">0.892</td>
             <td class="center">0.897</td>
           </tr>
           <tr>
             <td><strong>Gaussian NB</strong></td>
             <td class="center">0.705</td>
+            <td class="center">0.647</td>
             <td class="center">0.662</td>
             <td class="center">0.650</td>
+            <td class="center">-</td>
             <td class="center">-</td>
             <td class="center">-</td>
             <td class="center">-</td>
@@ -78,8 +92,10 @@
           <tr>
             <td><strong>Random Forest</strong></td>
             <td class="center">0.762</td>
+            <td class="center">0.778</td>
             <td class="center">0.624</td>
             <td class="center">0.648</td>
+            <td class="center">-</td>
             <td class="center">-</td>
             <td class="center">-</td>
             <td class="center">-</td>
@@ -87,7 +103,7 @@
     </tbody>
   </table>
   <div class="chart-caption">
-    PhoBERT with-neutral uses NeutralBoost 0.9. PhoBERT no-neutral uses the threshold 0.68 binary run; recall is left blank where it was not exported.
+    PhoBERT with-neutral uses NeutralBoost 0.9. PhoBERT no-neutral uses the validation-tuned threshold 0.68 binary run.
   </div>
 </section>
 
@@ -120,15 +136,16 @@
 </section>
 
 <!-- SLIDE: Model Convergence -->
-<section>
-  <h2>Best Neural Model Convergence</h2>
-  <img
-    src="analysis/chart_model_convergence.png?v=1"
-    style="width:100%; max-height:555px; object-fit:contain; border-radius:10px"
-    alt="Training and validation convergence chart"
-  />
+<section class="convergence-slide">
+  <h2>PhoBERT Neural Convergence</h2>
+  <div class="convergence-frame">
+    <img
+      src="analysis/chart_model_convergence.png?v=1"
+      alt="Training and validation convergence chart"
+    />
+  </div>
   <div class="chart-caption">
-    Classical ML models do not have epoch curves, so this chart uses the best neural run with saved training history.
+    The strongest neural family is PhoBERT; this chart uses its saved fine-tuning history.
   </div>
 </section>
 
