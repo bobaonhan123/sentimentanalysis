@@ -1,6 +1,6 @@
 # Sentiment Analysis — Training Report
 
-**Generated:** 2026-05-15 16:12:04  
+**Generated:** 2026-05-16 09:33:36  
 **Run ID:** `run_20260515_160859`  
 **Timestamp:** 2026-05-15T16:12:02.426154
 
@@ -167,6 +167,17 @@
 | Long-tail companies (<10) | Work-Life Balance | 336 | 27.4% |
 | High-review companies (50+) | Work-Life Balance | 222 | 27.0% |
 | Long-tail companies (<10) | Recruitment & Onboarding | 382 | 26.7% |
+
+### Recommendations
+| Priority | Evidence | Recommended action |
+|----------|----------|--------------------|
+| Salary & Benefits | 5,626 negative mentions; 59.9% negative | Run compensation and benefit benchmarking first in industries and company groups with the highest negative ratios. |
+| Work Environment | 10,933 mentions; 46.5% negative | Treat this as a polarizing culture signal: drill down by company/team and follow up with manager-level or culture surveys. |
+| Rising risk | Facilities & Tools increased by 17.4 pp to 36.7% negative | Create a recent-period alert list and inspect the underlying reviews before the issue becomes structural. |
+| Industry hotspot | Trường Quốc tế / Salary & Benefits has 91.5% negative across 47 mentions | Prioritize segment-specific action instead of applying one generic HR intervention across all industries. |
+| Company group | Long-tail companies (<10) / Salary & Benefits has 64.3% negative | Use company-volume groups to separate broad market pain points from issues concentrated in heavily reviewed employers. |
+
+> Use these recommendations as triage rules: combine negative volume, negative ratio, recent trend movement, and segment size before deciding where to intervene.
 
 ---
 ## 7. Training History

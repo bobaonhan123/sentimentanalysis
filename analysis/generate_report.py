@@ -109,7 +109,12 @@ def _chart_per_class_f1(run: dict, out: Path) -> Path:
 def _chart_confusion_matrix(run: dict, out: Path) -> Path:
     best_name = run["best_model"]["name"]
     cm = np.array(run["models"][best_name]["test"]["confusion_matrix"])
-    labels = ["Negative", "Neutral", "Positive"]
+    if cm.shape[0] == 2:
+        labels = ["Negative", "Positive"]
+    elif cm.shape[0] == 3:
+        labels = ["Negative", "Neutral", "Positive"]
+    else:
+        labels = [f"Class {i}" for i in range(cm.shape[0])]
 
     fig, ax = plt.subplots(figsize=(5, 4))
     im = ax.imshow(cm, cmap="Blues")
@@ -385,7 +390,6 @@ def _build_markdown(runs: list[dict], charts: dict[str, Path], out_dir: Path) ->
                         f"| {row.get('industry')} | {row.get('aspect')} | "
                         f"{int(row.get('Total Mentions', 0)):,} | {row.get('Negative %')}% |"
                     )
-
             company_hotspots = absa_insights.get("company_volume_hotspots") or []
             if company_hotspots:
                 a("\n**Company-volume group hotspots**")
@@ -396,6 +400,67 @@ def _build_markdown(runs: list[dict], charts: dict[str, Path], out_dir: Path) ->
                         f"| {row.get('company_volume_group')} | {row.get('aspect')} | "
                         f"{int(row.get('Total Mentions', 0)):,} | {row.get('Negative %')}% |"
                     )
+
+        a("\n### Recommendations")
+        a("| Priority | Evidence | Recommended action |")
+        a("|----------|----------|--------------------|")
+
+        salary_pos = absa.get("Positive", {}).get("Salary & Benefits", 0)
+        salary_neg = absa.get("Negative", {}).get("Salary & Benefits", 0)
+        salary_total = salary_pos + salary_neg + absa.get("Neutral", {}).get("Salary & Benefits", 0)
+        if salary_total:
+            salary_neg_pct = salary_neg / max(salary_total, 1) * 100
+            a(
+                "| Salary & Benefits | "
+                f"{salary_neg:,} negative mentions; {salary_neg_pct:.1f}% negative | "
+                "Run compensation and benefit benchmarking first in industries and company groups with the highest negative ratios. |"
+            )
+
+        work_env_pos = absa.get("Positive", {}).get("Work Environment", 0)
+        work_env_neg = absa.get("Negative", {}).get("Work Environment", 0)
+        work_env_total = work_env_pos + work_env_neg + absa.get("Neutral", {}).get("Work Environment", 0)
+        if work_env_total:
+            work_env_neg_pct = work_env_neg / max(work_env_total, 1) * 100
+            a(
+                "| Work Environment | "
+                f"{work_env_total:,} mentions; {work_env_neg_pct:.1f}% negative | "
+                "Treat this as a polarizing culture signal: drill down by company/team and follow up with manager-level or culture surveys. |"
+            )
+
+        trend_increases = absa_insights.get("largest_negative_ratio_increase") or []
+        if trend_increases:
+            top_trend = trend_increases[0]
+            a(
+                "| Rising risk | "
+                f"{top_trend.get('aspect')} increased by {top_trend.get('delta_pct')} pp to "
+                f"{top_trend.get('latest_negative_pct')}% negative | "
+                "Create a recent-period alert list and inspect the underlying reviews before the issue becomes structural. |"
+            )
+
+        industry_hotspots = absa_insights.get("industry_hotspots") or []
+        if industry_hotspots:
+            top_hotspot = industry_hotspots[0]
+            a(
+                "| Industry hotspot | "
+                f"{top_hotspot.get('industry')} / {top_hotspot.get('aspect')} has "
+                f"{top_hotspot.get('Negative %')}% negative across {int(top_hotspot.get('Total Mentions', 0)):,} mentions | "
+                "Prioritize segment-specific action instead of applying one generic HR intervention across all industries. |"
+            )
+
+        company_hotspots = absa_insights.get("company_volume_hotspots") or []
+        if company_hotspots:
+            top_company_group = company_hotspots[0]
+            a(
+                "| Company group | "
+                f"{top_company_group.get('company_volume_group')} / {top_company_group.get('aspect')} has "
+                f"{top_company_group.get('Negative %')}% negative | "
+                "Use company-volume groups to separate broad market pain points from issues concentrated in heavily reviewed employers. |"
+            )
+
+        a(
+            "\n> Use these recommendations as triage rules: combine negative volume, negative ratio, "
+            "recent trend movement, and segment size before deciding where to intervene."
+        )
 
     # ── History ───────────────────────────────────────────────────
     if len(runs) > 1:
@@ -417,10 +482,16 @@ def _build_markdown(runs: list[dict], charts: dict[str, Path], out_dir: Path) ->
 def generate(results_path: Path | None = None) -> Path:
     path = results_path or RESULTS_FILE
     runs = _load(path)
-    latest = runs[-1]
+    report_runs = [
+        r for r in runs
+        if "distribution_before" in r and "split" in r and "models" in r and "best_model" in r
+    ]
+    if not report_runs:
+        raise ValueError("No compatible full training runs found for report generation.")
+    latest = report_runs[-1]
     out_dir = path.parent
 
-    print(f"Generating report for {len(runs)} run(s)...")
+    print(f"Generating report for {len(report_runs)} compatible full training run(s)...")
 
     charts: dict[str, Path | None] = {}
     charts["compare"] = _chart_model_comparison(latest, out_dir)
@@ -434,7 +505,7 @@ def generate(results_path: Path | None = None) -> Path:
         if p:
             print(f"  Chart: {p.name}")
 
-    md = _build_markdown(runs, charts, out_dir)
+    md = _build_markdown(report_runs, charts, out_dir)
     REPORT_FILE.write_text(md, encoding="utf-8")
     print(f"  Report: {REPORT_FILE}")
     return REPORT_FILE
