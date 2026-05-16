@@ -136,6 +136,45 @@
 	flex: 0.7;
 }
 
+/* Software IT layoff-context slide */
+.layoff-context .layoff-card {
+	height: 172px;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	padding: 10px 12px;
+	text-align: center;
+}
+.layoff-context .layoff-label {
+	color: var(--c2);
+	font-size: 0.38em;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	margin-bottom: 6px;
+	text-transform: none;
+}
+.layoff-context .layoff-metric {
+	color: var(--c1);
+	font-size: 0.56em;
+	font-weight: 800;
+	line-height: 1.1;
+	margin: 0;
+}
+.layoff-context .layoff-copy {
+	color: var(--c2);
+	font-size: 0.36em;
+	line-height: 1.22;
+	margin: 7px 0 0;
+}
+.layoff-context .layoff-source {
+	color: var(--c2);
+	font-size: 0.3em;
+	line-height: 1.2;
+	margin: auto 0 0;
+}
+
 /* ── Tables ──────────────────────────────────────────── */
 .reveal table {
 	width: 100%;

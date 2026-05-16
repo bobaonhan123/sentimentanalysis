@@ -33,49 +33,52 @@ The heatmaps show where negative signals concentrate by industry and by company-
 ## Slide 11 - Industry Deep Dive: Software IT
 The deep dive picks Software IT because it has the largest recent sample, with 2,306 reviews and 8,941 aspect mentions from 2023 to 2026 YTD. The mixed chart shows that negative aspect ratio rose from 22.0% in 2023 to 55.3% in 2025, while 2026 YTD should be treated as an early partial-year signal.
 
-## Slide 12 - Year-over-Year Aspect Movement
+## Slide 12 - Why 2025 May Have Peaked
+This slide is market context, not proof of causality. Layoffs.fyi is a widely used public tracker, so it is useful for the global layoff direction, but it is not an official labor-statistics source. The Vietnam sources are more directly relevant: VietnamWorks inTECH surveyed IT candidates and companies in 2024, and Vieclam24h/VietnamNet reported weaker IT hiring with more job seekers in early 2025. Together, these sources make the 2025 negative spike plausible, but they should be presented as supporting context.
+
+## Slide 13 - Year-over-Year Aspect Movement
 This slide compares 2024 and 2025 inside Software IT. Salary & Benefits increased by 19.3 percentage points and Work Environment by 18.1 points, so the 2025 deterioration is driven by compensation and team climate, not only by process or tools.
 
-## Slide 13 - Representative Company Drilldown
+## Slide 14 - Representative Company Drilldown
 The bubble chart compares representative Software IT companies by aspect. Read it as: color and the number inside each bubble show negative ratio, while bubble size shows mention volume. A large green bubble means many employees discussed that aspect, but the negative ratio is low. FPT Software is the scaled positive case, LGEDV has a specific Technology & Product watch point, while BMBSOFT and ALTEK show concentrated Salary and Work Environment risk.
 
-## Slide 14 - Business Recommendations from Aspect Analysis
+## Slide 15 - Business Recommendations from Aspect Analysis
 The recommendations convert aspect findings into actions. First, benchmark compensation and benefits because Salary & Benefits is the strongest pain point. Second, review team climate because Work Environment also worsened sharply. Third, use segment and company watchlists instead of one generic HR action. Finally, use early-warning rules so year-specific spikes are caught before they become structural.
 
-## Slide 15 - Company Case: BMBSOFT 2025
+## Slide 16 - Company Case: BMBSOFT 2025
 This slide turns the recommendation into one concrete business case. In Software IT, BMBSOFT Vietnam in 2025 has 39 reviews, 212 aspect mentions, and 61.8% overall negative aspect mentions. The chart shows that the problem is concentrated in Salary & Benefits and Work Environment, both around 85% negative. The recommendation is therefore not a generic HR action: first reset pay and benefits communication, then run a short team-climate review, while preserving Career Growth as a positive anchor.
 
-## Slide 16 - What Words Drive the Pain Points?
+## Slide 17 - What Words Drive the Pain Points?
 The keyword chart shows the words and matched terms behind the aspect sentiment. This helps translate aspect-level results into more concrete business actions.
 
-## Slide 17 - Preprocessing Pipeline
+## Slide 18 - Preprocessing Pipeline
 This section introduces the Vietnamese-specific preprocessing pipeline used before modeling and aspect analysis.
 
-## Slide 18 - Text Preprocessing: 8 Steps
+## Slide 19 - Text Preprocessing: 8 Steps
 The preprocessing pipeline standardizes Vietnamese text through Unicode normalization, lowercasing, noise removal, character filtering, whitespace cleanup, tokenization with underthesea, and stopword removal. These steps reduce web-scraping noise and make the text more consistent for the models.
 
-## Slide 19 - Stopword Categories
+## Slide 20 - Stopword Categories
 The stopword list is built from corpus frequency: first we count tokens across the full dataset, then review high-frequency words with low sentiment value, and finally keep a curated Vietnamese stopword list. The table groups the final stopwords into function words, conjunctions, prepositions, pronouns, and quantifiers.
 
-## Slide 20 - Modeling Strategy
+## Slide 21 - Modeling Strategy
 This section focuses on weak labels, label quality, neutral handling, and deployable sentiment models.
 
-## Slide 21 - The Core Modeling Challenge
+## Slide 22 - The Core Modeling Challenge
 The initial weak labels come from star ratings: 1-2 stars are negative, 3 stars are neutral, and 4-5 stars are positive, with keyword and ABSA conflicts used to adjust labels. The hard part is neutral, because it can mean average, mixed, uncertain, or low-intensity sentiment.
 
-## Slide 22 - Experiment Results: 7 Target Models
+## Slide 23 - Experiment Results: 7 Target Models
 This table compares the seven target model families using Accuracy, Macro Recall, and Macro F1. With neutral labels, PhoBERT NeutralBoost 0.9 is the best PhoBERT row; without neutral labels, PhoBERT threshold 0.68 gives the best Macro F1 at 0.960.
 
-## Slide 23 - Consistent Model Comparison
+## Slide 24 - Consistent Model Comparison
 The chart keeps the same seven model targets and compares Macro F1 across neutral settings. The practical recommendation is to keep a binary no-neutral model for high-confidence polarity alerts, and keep the cleaned 3-class setting when neutral interpretation is needed for business analysis.
 
-## Slide 24 - Best Neural Model Convergence
+## Slide 25 - Best Neural Model Convergence
 This convergence chart uses the best neural run that has saved epoch history. It is included because neural models have train and validation curves, while classical ML models such as Logistic Regression and Linear SVC do not have epoch-based convergence curves.
 
-## Slide 25 - Practical Value of the Topic
+## Slide 26 - Practical Value of the Topic
 The practical value is that the system converts unstructured employee reviews into measurable sentiment, aspect distribution, and time trends. It also supports market listening and decision support without reading thousands of reviews manually.
 
-## Slide 26 - Summary
+## Slide 27 - Summary
 The summary slide lists what we built and the key results. The strongest binary polarity F1 is 0.960 from PhoBERT threshold 0.68, the cleaned 3-class F1 is 0.877, the label audit found 1,570 likely issues, and Salary is the biggest pain point with 60% negative sentiment.
 
-## Slide 27 - Selected References
+## Slide 28 - Selected References

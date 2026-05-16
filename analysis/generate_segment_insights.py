@@ -379,7 +379,7 @@ def focus_company_bubble_chart(df: pd.DataFrame, industry: str) -> tuple[pd.Data
     ax.set_yticklabels([_short_label(c, 24) for c in companies], fontsize=8)
     ax.invert_yaxis()
     ax.set_title(
-        f"{industry}: Company Aspect Hotspots\n"
+        f"{industry} (2023-2026 YTD): Company Aspect Hotspots\n"
         "color/text = negative ratio; bubble size = aspect mention volume",
         fontsize=11,
         pad=10,
