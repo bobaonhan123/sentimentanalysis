@@ -1,81 +1,81 @@
-# 1900.com.vn Sentiment Analysis — Project Analysis
+# 1900.com.vn Workplace Review Analysis - Current Project State
 
-## OVERVIEW
+## Overview
 
-Pipeline phân tích sentiment reviews công ty Việt Nam từ 1900.com.vn.
-Data đã crawl sẵn trong `data_post_processing/1900_export_reviews.csv` (10,000 reviews).
+The current working dataset is:
 
-## PIPELINE
+- `dataset/1900_export_reviews (5).csv`
+- `72,100` Vietnamese workplace reviews
 
+The active research direction is no longer generic 3-class sentiment classification. It is now:
+
+- binary dissatisfaction detection: `negative` vs `non_negative`
+- aspect-level negative signal extraction for actionability
+
+## Current Binary Pipeline
+
+```text
+72,100 reviews
+  -> Vietnamese preprocessing
+  -> complaint-first weak labeling
+  -> ambiguous review flagging
+  -> binary model training
+  -> aspect-aware audit outputs
+  -> report / dashboard / export artifacts
 ```
-CSV (10k reviews) → Preprocess (underthesea tokenize + stopwords)
-    → FastText cc.vi.300.bin (FROZEN, 300-dim embeddings)
-    → Extra features (char_len, word_count, excl_ratio, pos/neg keyword ratio)
-    → 305-dim feature vector
-    → Train 5 models + Ensemble → Evaluate → Save best
-    → Visualize trên Streamlit tab Experiments
-```
 
-## LABELING
+## Current Labeling Outcome
 
-- Rating 1-2★ = negative, 3★ = neutral, 4-5★ = positive
-- Weak label: keyword signals adjust borderline (neutral) reviews
+From the active binary weak-labeling pipeline:
 
-## MODELS (6 entries)
+- `negative`: `22,928`
+- `non_negative`: `49,172`
+- `ambiguous`: `11,142`
 
-| # | Model             | Type       | Balance       |
-|---|-------------------|------------|---------------|
-| 1 | LogisticRegression | Individual | weighted loss |
-| 2 | LinearSVC          | Individual | weighted loss |
-| 3 | RandomForest       | Individual | weighted loss |
-| 4 | GaussianNB         | Individual | -             |
-| 5 | MLP_NeuralNet      | Neural Net | early stopping|
-| 6 | Ensemble_SoftVote  | Ensemble   | soft voting   |
+## Best Full-Run Result
 
-## DATA
+Latest full run on `dataset/1900_export_reviews (5).csv`:
 
-- Source: `data_post_processing/1900_export_reviews.csv`
-- 10,000 reviews, columns: company, industry, rating, title, pros, cons, advice, recommends
-- Rating distribution: 1★=2245, 2★=726, 3★=2108, 4★=2667, 5★=2254
-- Text chủ yếu ở cột `cons` (9,528 rows null `pros`)
+- best model: `TFIDF_WordChar_LinearSVC`
+- negative precision: `0.7988`
+- negative recall: `0.9394`
+- negative F1: `0.8634`
+- F2-negative: `0.9075`
+- PR-AUC-negative: `0.9566`
+- accuracy: `0.8911`
 
-## COMMANDS
+## Key Files
+
+Core pipeline:
+
+- `src/training/binary_labeling.py`
+- `src/training/binary_trainer.py`
+- `src/common/data_paths.py`
+
+Generated artifacts:
+
+- `analysis/binary_labeled_reviews.csv`
+- `analysis/binary_training_summary.csv`
+- `analysis/binary_best_model_test_predictions.csv`
+- `analysis/binary_false_negatives.csv`
+- `analysis/binary_false_positives.csv`
+- `models/binary/TFIDF_WordChar_LinearSVC.pkl`
+
+## Commands
 
 ```bash
-# Train (chạy trên server, tắt SSH vẫn chạy)
-nohup python run.py train --force > train.log 2>&1 &
+# Full binary training on the active dataset
+python run.py train-binary
 
-# Xem log
-tail -f train.log
+# Smoke run
+python run.py train-binary --max-examples 600
 
-# Xem kết quả trên Streamlit
-nohup streamlit run src/export/app.py --server.port 8501 --server.address 0.0.0.0 > streamlit.log 2>&1 &
-# Mở browser: http://ssh.openinfra.space:8501 → tab Experiments
+# Predict with the current best binary model
+python run.py predict-binary --text "review text here"
 ```
 
-## FILE STRUCTURE
+## Notes
 
-```
-src/
-├── training/
-│   ├── labeling.py      — Rating → sentiment + weak labeling
-│   ├── balancing.py     — Class weight computation
-│   ├── trainer.py       — Full pipeline: embeddings + 5 models + ensemble
-│   └── experiment.py    — Experiment logging (JSON)
-├── preprocessing/
-│   └── processor.py     — NLP: normalize, tokenize, stopwords
-├── export/
-│   └── app.py           — Streamlit UI (4 tabs: Companies, Reviews, Export, Experiments)
-├── models.py            — SQLAlchemy ORM
-├── config.py            — Pydantic settings
-└── database.py          — DB connection
-
-models/                  — Saved models + experiments.json
-data_post_processing/    — CSV data (already crawled)
-dags/                    — Airflow DAG (crawl pipeline)
-```
-
-## DEPENDENCIES
-
-Python 3.11+, fasttext-wheel, scikit-learn, imbalanced-learn, underthesea,
-pandas, streamlit, plotly, joblib, sqlalchemy, psycopg2-binary
+- `data_post_processing/1900_export_reviews.csv` is legacy and no longer the default source.
+- `dataset/1900_export_reviews (5).csv` is now the canonical review CSV for the active Python pipeline.
+- `PhoBERT_Binary` is still skipped in this environment because `torch` is not installed.
