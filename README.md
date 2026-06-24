@@ -70,7 +70,18 @@ pip install torch transformers
 
 Yêu cầu: **Python 3.11+** (`requires-python` trong `pyproject.toml`). Không có `requirements.txt`.
 
+### Windows (sau `git pull` / clone)
+
+Sau khi clone, bạn sẽ thấy `data/vi/raw/` và `data/en/glassdoor/` (file `.gitkeep` + `data/README.md`). **CSV và parquet vẫn không có trong Git.**
+
+1. Kích hoạt venv: `.venv\Scripts\activate`
+2. **Tiếng Việt:** copy `1900_export_reviews.csv` vào `data\vi\raw\` (hoặc chạy crawl — xem mục CSV bên dưới). Nếu thiếu thư mục: `mkdir data\vi\raw`
+3. **Tiếng Anh:** không cần copy; chạy pipeline hoặc `python scripts\cache_glassdoor.py` — parquet sẽ được tạo trong `data\en\glassdoor\`.
+
 ### 2. Những gì KHÔNG có trong Git — lấy ở đâu
+
+> **Lưu ý:** Thư mục `data/` có trong repo (placeholder `.gitkeep`); chỉ **nội dung** CSV/parquet bị ignore (xem `.gitignore`).
+
 
 | Thành phần | Trong Git? | Cách có trên máy mới |
 |------------|------------|----------------------|
