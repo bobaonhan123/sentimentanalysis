@@ -1,0 +1,53 @@
+{
+  "name": "cleanlab_pruned_negative_vs_non_negative__Custom_VNReviewFusion_LinearSVC",
+  "backend": "sklearn_text",
+  "input_type": "review_fields",
+  "model_path": "/Users/enosta/Project/sentimentanalysis/models/tfidf/vi/production/best_model.pkl",
+  "label_names": {
+    "0": "negative",
+    "1": "non_negative"
+  },
+  "trained_by": "variant_trainer",
+  "model_family": "custom_vn_project",
+  "language": "vi",
+  "val_f1_macro": 0.9938,
+  "test_f1_macro": 0.9929,
+  "smoke": {
+    "passed": true,
+    "correct": 4,
+    "total": 4,
+    "predictions": [
+      {
+        "text": "cty ko ổn, lương thấp, sếp toxic, OT không trả tiền",
+        "expected": 0,
+        "prediction": 0,
+        "passed": true
+      },
+      {
+        "text": "không có phúc lợi, không tăng lương, quản lý tệ",
+        "expected": 0,
+        "prediction": 0,
+        "passed": true
+      },
+      {
+        "text": "môi trường tốt, đồng nghiệp hỗ trợ, phúc lợi ổn, lương tốt",
+        "expected": 1,
+        "prediction": 1,
+        "passed": true
+      },
+      {
+        "text": "OT nhiều nhưng có trả tiền, team support tốt",
+        "expected": 1,
+        "prediction": 1,
+        "passed": true
+      }
+    ]
+  },
+  "run_id": "variant_run_current_20260623_192019",
+  "run_dir": "/Users/enosta/Project/sentimentanalysis/models/tfidf/vi/runs/variant_run_current_20260623_192019",
+  "selection_audit": "/Users/enosta/Project/sentimentanalysis/models/tfidf/vi/runs/variant_run_current_20260623_192019/selection_audit.json",
+  "smoke_predictions": "/Users/enosta/Project/sentimentanalysis/models/tfidf/vi/runs/variant_run_current_20260623_192019/smoke_predictions.csv",
+  "data_source": "current",
+  "sample_count": 72099,
+  "deployed": true
+}

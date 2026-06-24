@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 ANALYSIS_DIR = ROOT / "analysis"
 TRAINING_RESULTS = ANALYSIS_DIR / "training_results.json"
-DATA_CSV = ROOT / "data_post_processing" / "1900_export_reviews.csv"
+DATA_CSV = ROOT / "data" / "vi" / "raw" / "1900_export_reviews.csv"
 
 BINARY_LABEL_NAMES = {0: "negative", 2: "positive"}
 

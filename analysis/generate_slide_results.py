@@ -28,12 +28,15 @@ sys.path.insert(0, str(ROOT))
 
 from src.training.labeling import LABEL_NAMES, load_labeled_data, rating_to_sentiment
 
+from src.artifacts.paths import phobert_binary_results_path
+
 ANALYSIS_DIR = ROOT / "analysis"
 SLIDE_ANALYSIS_DIRS = [ROOT / "slide" / "analysis", ROOT / "slide" / "public" / "analysis"]
 TRAINING_RESULTS = ANALYSIS_DIR / "training_results.json"
 PHOBERT_RESULTS = ANALYSIS_DIR / "phobert_outputs" / "phobert_results.json"
+PHOBERT_BINARY_RESULTS = phobert_binary_results_path("vi")
 RESULTS_PARTIAL = ROOT / "slide" / "partials" / "06-results.html"
-REVIEWS_CSV = ROOT / "data_post_processing" / "1900_export_reviews.csv"
+REVIEWS_CSV = ROOT / "data" / "vi" / "raw" / "1900_export_reviews.csv"
 
 # Fallback values are the exported PhoBERT results currently used by the deck.
 # With-neutral values come from the PhoBERT summary table; no-neutral values were

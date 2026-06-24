@@ -20,7 +20,9 @@ logger = logging.getLogger(__name__)
 # ── Paths ────────────────────────────────────────────────────────────────────
 
 _ROOT = Path(__file__).resolve().parents[2]
-DATA_CSV = _ROOT / "data_post_processing" / "1900_export_reviews.csv"
+from src.training.labeling import VI_REVIEWS_CSV
+
+DATA_CSV = VI_REVIEWS_CSV
 DEFAULT_CSV = DATA_CSV
 DEFAULT_OUT = _ROOT / "analysis"
 
@@ -102,8 +104,7 @@ POSITIVE_WORDS: list[str] = [
     "năng động", "cởi mở", "hợp lý", "xứng đáng", "phù hợp", "ổn định",
     "tốt bụng", "nhanh", "hiệu quả", "tuyệt vời", "khá ổn", "học được",
     "tốt đẹp", "hài lòng", "thoải mái", "cạnh tranh", "tận tâm", "quan tâm",
-    "không phàn nàn", "không có gì phàn nàn", "không có gì để chê",
-    "không có gì cần phàn nàn", "chịu khó", "kiên trì",
+    "chịu khó", "kiên trì",
 ]
 
 NEGATIVE_WORDS: list[str] = [
@@ -114,6 +115,13 @@ NEGATIVE_WORDS: list[str] = [
     "không học được", "không phát triển", "thất vọng", "khó khăn",
     "không có", "quá tải", "mệt", "chán", "không minh bạch",
     "không công bằng", "không hợp lý", "bóc lột", "thiếu chuyên nghiệp",
+    # HR / workplace negative lexicon expansion
+    "trễ lương", "đấu đá", "ép buộc", "nhàm chán", "cắt giảm",
+    "không tăng lương", "sa thải", "đuổi việc", "quấy rối", "micromanagement",
+    "không recommend", "văn hóa độc hại", "lừa đảo", "ot không lương",
+    "làm thêm không lương", "thưởng ít", "không có thưởng", "áp lực cao",
+    "burnout", "kiệt sức", "layoff", "bóc lột sức lao động",
+    "không có phúc lợi", "lương không đủ sống",
 ]
 
 # Sorted longest-first so multi-word expressions match before substrings

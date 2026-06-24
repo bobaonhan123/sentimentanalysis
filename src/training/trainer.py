@@ -50,8 +50,17 @@ from src.analysis.absa import run_absa
 
 logger = logging.getLogger(__name__)
 
-MODELS_DIR = Path(__file__).resolve().parents[2] / "models"
-FASTTEXT_MODEL_PATH = MODELS_DIR / "cc.vi.300.bin"
+ROOT_DIR = Path(__file__).resolve().parents[2]
+from src.artifacts.paths import (  # noqa: E402
+    ANALYSIS_DIR,
+    TRAINING_RESULTS_FILE,
+    fasttext_embedding_path,
+    fasttext_paths,
+)
+
+MODELS_DIR = ROOT_DIR / "models"
+FASTTEXT_PATHS = fasttext_paths("vi")
+FASTTEXT_MODEL_PATH = fasttext_embedding_path("vi")
 
 
 def _evaluate(y_true, y_pred) -> dict:
@@ -76,19 +85,42 @@ def _data_fingerprint(df: pd.DataFrame) -> str:
 
 # ── FastText frozen embeddings ──────────────────────────────────
 
-def _ensure_fasttext_model() -> fasttext.FastText._FastText:
-    """Download pretrained Vietnamese FastText if not exists, then load."""
-    if not FASTTEXT_MODEL_PATH.exists():
-        logger.info("Downloading pretrained FastText Vietnamese (cc.vi.300.bin)...")
+def _ensure_fasttext_model(lang: str = "vi") -> fasttext.FastText._FastText:
+    """Download pretrained FastText (cc.{lang}.300.bin) if missing, then load."""
+    lang = (lang or "vi").strip().lower()
+    if lang not in {"vi", "en"}:
+        raise ValueError(f"Unsupported FastText language: {lang}")
+
+    paths = fasttext_paths(lang)
+    filename = f"cc.{lang}.300.bin"
+    legacy = MODELS_DIR / filename if lang == "vi" else None
+    target = paths.base / filename
+    load_path = target if target.exists() else legacy if legacy and legacy.exists() else None
+
+    if load_path is None:
+        logger.info("Downloading pretrained FastText %s (%s)...", lang, filename)
         MODELS_DIR.mkdir(parents=True, exist_ok=True)
+        paths.base.mkdir(parents=True, exist_ok=True)
+        partial = MODELS_DIR / f"{filename}.gz.part"
+        if partial.exists():
+            partial.unlink()
         import os
+
         orig_dir = os.getcwd()
         os.chdir(str(MODELS_DIR))
-        fasttext.util.download_model("vi", if_exists="ignore")
+        fasttext.util.download_model(lang, if_exists="ignore")
         os.chdir(orig_dir)
+        downloaded = MODELS_DIR / filename
+        if not downloaded.exists():
+            raise FileNotFoundError(f"FastText download failed: {downloaded} not found")
+        if not target.exists():
+            import shutil
 
-    logger.info(f"Loading frozen FastText model from {FASTTEXT_MODEL_PATH}...")
-    return fasttext.load_model(str(FASTTEXT_MODEL_PATH))
+            shutil.move(str(downloaded), str(target))
+        load_path = target
+
+    logger.info("Loading frozen FastText model from %s...", load_path)
+    return fasttext.load_model(str(load_path))
 
 
 def _texts_to_embeddings(ft_model, texts) -> np.ndarray:
@@ -418,9 +450,9 @@ def _train_lstm_model(
 
 # ── Training results snapshot (for final report) ────────────────
 
-_ANALYSIS_DIR = Path(__file__).resolve().parents[2] / "analysis"
-_TRAINING_RESULTS_FILE = _ANALYSIS_DIR / "training_results.json"
-_BEST_MODEL_META_FILE = MODELS_DIR / "best_model_meta.json"
+_ANALYSIS_DIR = ANALYSIS_DIR
+_TRAINING_RESULTS_FILE = TRAINING_RESULTS_FILE
+_BEST_MODEL_META_FILE = FASTTEXT_PATHS.meta_json
 
 
 def _save_training_results(record: dict) -> None:
@@ -765,16 +797,20 @@ def train_pipeline(force: bool = False, csv_path: str | None = None) -> dict:
             **(lstm_artifacts or {}),
         }
     else:
-        joblib.dump(trained_models[best_name], MODELS_DIR / "best_model.pkl")
+        FASTTEXT_PATHS.production_dir.mkdir(parents=True, exist_ok=True)
+        joblib.dump(trained_models[best_name], FASTTEXT_PATHS.best_model_pkl)
         input_type = model_inputs.get(best_name, "features")
+        scaler_path = FASTTEXT_PATHS.production_dir / "scaler.pkl"
         best_meta = {
             "name": best_name,
             "backend": "sklearn_text" if input_type == "text_clean" else "sklearn_fasttext",
             "input_type": input_type,
-            "model_path": str(MODELS_DIR / "best_model.pkl"),
-            "scaler_path": str(MODELS_DIR / "scaler.pkl"),
+            "model_family": "fasttext",
+            "language": "vi",
+            "model_path": str(FASTTEXT_PATHS.best_model_pkl),
+            "scaler_path": str(scaler_path),
         }
-    joblib.dump(scaler, MODELS_DIR / "scaler.pkl")
+    joblib.dump(scaler, FASTTEXT_PATHS.production_dir / "scaler.pkl")
     _BEST_MODEL_META_FILE.write_text(
         json.dumps(best_meta, indent=2, ensure_ascii=False),
         encoding="utf-8",
@@ -826,12 +862,18 @@ def train_pipeline(force: bool = False, csv_path: str | None = None) -> dict:
 
 def predict(texts: list[str]) -> list[dict]:
     """Load frozen FastText + scaler + best model → predict."""
-    model_path = MODELS_DIR / "best_model.pkl"
-    scaler_path = MODELS_DIR / "scaler.pkl"
+    legacy_model = MODELS_DIR / "best_model.pkl"
+    legacy_scaler = MODELS_DIR / "scaler.pkl"
+    legacy_meta = MODELS_DIR / "best_model_meta.json"
+    model_path = FASTTEXT_PATHS.best_model_pkl if FASTTEXT_PATHS.best_model_pkl.exists() else legacy_model
+    scaler_path = FASTTEXT_PATHS.production_dir / "scaler.pkl"
+    if not scaler_path.exists():
+        scaler_path = legacy_scaler
     meta = None
-    if _BEST_MODEL_META_FILE.exists():
+    meta_path = _BEST_MODEL_META_FILE if _BEST_MODEL_META_FILE.exists() else legacy_meta
+    if meta_path.exists():
         try:
-            meta = json.loads(_BEST_MODEL_META_FILE.read_text(encoding="utf-8"))
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             meta = None
 

@@ -43,6 +43,20 @@ bloom_filter.bin
 .ipynb_checkpoints/
 
 # Models
-models/*.bin
-models/*.bin.gz
-models/*.pkl
+models/**/*.bin
+models/**/*.bin.gz
+models/**/*.pkl
+models/**/*.safetensors
+models/**/runs/
+models/statistics/*.log
+models/statistics/*.pid
+models/statistics/*.csv
+models/statistics/*.json
+models/statistics/full_experiment_manifest.json
+models/statistics/full_experiment_run.log
+models/comparisons/*_comparison_*.json
+
+# Dataset caches (generated / large)
+data/en/glassdoor/*.parquet
+.hf_datasets/
+.local_deps/

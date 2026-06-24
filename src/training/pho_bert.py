@@ -188,185 +188,19 @@ raw_df.head(3)
 
 """## 2. Current Weak Labelling Logic
 
-Đây là bản self-contained của logic trong `src/training/labeling.py`: rating tạo nhãn ban đầu, sau đó keyword + ABSA opinion lexicon sửa các case rating-text mismatch. Neutral được giữ là lớp riêng, không gộp vào positive/negative.
+Reuse canonical logic from `src/training/labeling.py` so Colab and pipeline stay in sync.
 """
 
-def rating_to_sentiment(rating: float | None) -> int | None:
-    if rating is None or pd.isna(rating):
-        return None
-    rating = float(rating)
-    if rating <= 2.0:
-        return LABEL_MAP["negative"]
-    if rating <= 3.0:
-        return LABEL_MAP["neutral"]
-    return LABEL_MAP["positive"]
+from src.training.labeling import (
+    LABEL_MAP as _CANONICAL_LABEL_MAP,
+    LABEL_NAMES as _CANONICAL_LABEL_NAMES,
+    rating_to_sentiment,
+    weak_label_combine,
+)
 
-_NEGATIVE_KEYWORDS = [
-    'tệ',
-    'kém',
-    'tồi',
-    'chán',
-    'thất vọng',
-    'không tốt',
-    'lương thấp',
-    'quá tải',
-    'áp lực',
-    'bóc lột',
-    'không công bằng',
-    'thiếu chuyên nghiệp',
-    'hay thay đổi',
-    'không ổn định',
-    'môi trường độc hại',
-    'overtime',
-    'không có cơ hội',
-    'trì trệ',
-    'lãnh đạo kém',
-    'quan liêu',
-    'không phù hợp',
-    'không xứng đáng',
-    'không minh bạch',
-]
+assert LABEL_MAP == _CANONICAL_LABEL_MAP
+assert LABEL_NAMES == _CANONICAL_LABEL_NAMES
 
-_POSITIVE_KEYWORDS = [
-    'tuyệt vời',
-    'xuất sắc',
-    'tốt',
-    'chuyên nghiệp',
-    'hài lòng',
-    'lương cao',
-    'phúc lợi',
-    'cơ hội',
-    'phát triển',
-    'năng động',
-    'thân thiện',
-    'hỗ trợ',
-    'linh hoạt',
-    'ổn định',
-    'học hỏi',
-    'sáng tạo',
-    'đãi ngộ tốt',
-    'đồng nghiệp tốt',
-    'cân bằng',
-    'không phàn nàn',
-    'không có gì phàn nàn',
-    'không có gì để chê',
-    'không có gì cần phàn nàn',
-    'chịu khó',
-    'kiên trì',
-]
-
-_ABSA_POSITIVE = [
-    'tốt',
-    'tuyệt',
-    'ổn',
-    'tích cực',
-    'nhiệt tình',
-    'rõ ràng',
-    'minh bạch',
-    'công bằng',
-    'hỗ trợ',
-    'vui',
-    'thân thiện',
-    'chuyên nghiệp',
-    'năng động',
-    'cởi mở',
-    'hợp lý',
-    'xứng đáng',
-    'phù hợp',
-    'ổn định',
-    'hiệu quả',
-    'tuyệt vời',
-    'hài lòng',
-    'thoải mái',
-    'cạnh tranh',
-    'tận tâm',
-    'quan tâm',
-    'không phàn nàn',
-    'không có gì phàn nàn',
-    'không có gì để chê',
-    'chịu khó',
-    'kiên trì',
-]
-
-_ABSA_NEGATIVE = [
-    'không tốt',
-    'không ổn',
-    'không phù hợp',
-    'không xứng đáng',
-    'tệ',
-    'kém',
-    'chậm',
-    'áp lực',
-    'stress',
-    'thấp',
-    'thiếu',
-    'ràng buộc',
-    'bất công',
-    'drama',
-    'độc đoán',
-    'toxic',
-    'khắc khe',
-    'ì ạch',
-    'trễ',
-    'cũ kỹ',
-    'thất vọng',
-    'khó khăn',
-    'quá tải',
-    'mệt',
-    'chán',
-    'không minh bạch',
-    'không công bằng',
-    'không hợp lý',
-]
-
-def _keyword_score(text: str) -> float:
-    if not text or pd.isna(text):
-        return 0.0
-    t = str(text).lower()
-    pos = sum(1 for kw in _POSITIVE_KEYWORDS if kw in t)
-    neg = sum(1 for kw in _NEGATIVE_KEYWORDS if kw in t)
-    return float(pos - neg)
-
-def _absa_score(title: str, pros: str, cons: str, advice: str) -> float:
-    def _field_score(text: str, weight: float = 1.0) -> float:
-        if not text or pd.isna(text):
-            return 0.0
-        t = str(text).lower()
-        pos = sum(1 for w in _ABSA_POSITIVE if w in t)
-        neg = sum(1 for w in _ABSA_NEGATIVE if w in t)
-        return (pos - neg) * weight
-
-    # Current repo logic: newer CSV often stores the full body in `cons`,
-    # so `cons` is not given an automatic negative-heavy weight.
-    return (
-        _field_score(title, 1.0)
-        + _field_score(pros, 1.0)
-        + _field_score(cons, 1.0)
-        + _field_score(advice, 0.5)
-    )
-
-def weak_label_combine(rating_label: int, pros: str, cons: str, advice: str, title: str = "") -> tuple[int, str]:
-    all_text = " ".join(str(x) for x in [title, pros, cons, advice])
-    combined = _keyword_score(all_text) + _absa_score(title, pros, cons, advice)
-
-    if rating_label == LABEL_MAP["neutral"]:
-        if combined <= -2.5:
-            return LABEL_MAP["negative"], "neutral_to_negative_absa"
-        if combined >= 2.5:
-            return LABEL_MAP["positive"], "neutral_to_positive_absa"
-        return rating_label, "neutral_unchanged"
-
-    if rating_label == LABEL_MAP["positive"] and combined <= -5:
-        return LABEL_MAP["negative"], "positive_to_negative_absa_override"
-    if rating_label == LABEL_MAP["positive"] and combined <= -2:
-        return LABEL_MAP["neutral"], "positive_to_neutral_absa_conflict"
-
-    if rating_label == LABEL_MAP["negative"] and combined >= 5:
-        return LABEL_MAP["positive"], "negative_to_positive_absa_override"
-    if rating_label == LABEL_MAP["negative"] and combined >= 2:
-        return LABEL_MAP["neutral"], "negative_to_neutral_absa_conflict"
-
-    return rating_label, "rating"
 
 def make_labeled_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     records = []
@@ -388,7 +222,9 @@ def make_labeled_dataframe(df: pd.DataFrame) -> pd.DataFrame:
         pros = str(row.get("pros") or "")
         cons = str(row.get("cons") or "")
         advice = str(row.get("advice") or "")
-        label, label_source = weak_label_combine(rating_label, pros, cons, advice, title=title)
+        label, label_source = weak_label_combine(
+            rating_label, pros, cons, advice, title=title, rating=row.get("rating")
+        )
 
         records.append({
             "text": text,

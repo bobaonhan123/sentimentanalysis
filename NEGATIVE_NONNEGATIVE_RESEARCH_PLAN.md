@@ -61,8 +61,9 @@ Phát biểu đúng là:
 
 Từ đó, bài toán lõi gồm hai tầng:
 
-1. **Document-level dissatisfaction detection**
-   - nhãn: `negative` / `non-negative`
+1. **Document-level negative detection**
+   - nhãn: `negative` (có bất kỳ yếu tố tiêu cực — gồm mixed/neutral) / `non-negative` (chỉ tích cực thuần)
+   - mục tiêu nghiệp vụ: nhận diện review **có dấu hiệu tiêu cực**, kể cả review 4–5★ còn complaint
 
 2. **Aspect-level negative signal identification**
    - nhiều khía cạnh có thể cùng xuất hiện trong một review
@@ -73,8 +74,10 @@ Từ đó, bài toán lõi gồm hai tầng:
 
 vì doanh nghiệp cần:
 
-- biết có bất mãn hay không;
-- biết bất mãn về điều gì.
+- biết review có thực sự tích cực hay không;
+- biết phần không tích cực nằm ở khía cạnh nào.
+
+> **Lý do đổi framing (2026-06):** chỉ cần một phần review có negative thì tính là có yếu tố negative; review 4 sao vẫn có thể chứa complaint; neutral/mixed gộp vào `negative`. `non-negative` chỉ khi hoàn toàn tích cực, không có cue tiêu cực.
 
 ## 5. Research questions đã rút gọn
 
@@ -82,7 +85,7 @@ Giữ đúng **3 research questions chính** và **1 research question phụ**.
 
 ### RQ1
 
-Với review nhân sự tiếng Việt, làm thế nào để xây dựng một hệ thống phát hiện bất mãn `negative / non-negative` có độ nhạy cao đối với các review thật sự tiêu cực?
+Với review nhân sự tiếng Việt, làm thế nào để xây dựng một hệ thống phát hiện review `non-positive / positive` có độ nhạy cao đối với các review thật sự không tích cực?
 
 ### RQ2
 
@@ -100,7 +103,7 @@ Những hiện tượng ngôn ngữ nào trong review nhân sự tiếng Việt 
 
 ### H1
 
-Một hệ thống được thiết kế trực tiếp cho bài toán `negative / non-negative` sẽ đạt hiệu quả đủ mạnh trên các chỉ số phát hiện bất mãn, đặc biệt là `negative recall`, `negative F1`, `F2-negative`, và `PR-AUC-negative`.
+Một hệ thống được thiết kế trực tiếp cho bài toán `non-positive / positive` sẽ đạt hiệu quả đủ mạnh trên các chỉ số phát hiện không tích cực, đặc biệt là `non-positive recall`, `non-positive F1`, `F2-non-positive`, và `PR-AUC-non-positive`.
 
 ### H2
 
@@ -124,11 +127,11 @@ Một mô hình có tầng `aspect-level negative detection` sẽ tạo đầu r
 - vai trò phù hợp:
 - auxiliary transfer cho binary dissatisfaction detection;
 - external robustness check ở cùng domain employee reviews;
-- bổ sung tính khách quan khi tranh luận rằng framing `negative / non-negative` không chỉ đúng với đúng một tập tiếng Việt.
+- bổ sung tính khách quan khi tranh luận rằng framing `non-positive / positive` không chỉ đúng với đúng một tập tiếng Việt.
 
 ### Bài toán
 
-- `negative / non-negative`
+- `non-positive / positive` (3-class weak labels giữ nguyên nội bộ; train binary gộp 0+1 vs 2)
 
 ### Baseline
 
