@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
 """Run full-scale experiments on Vietnamese + English datasets.
 
-Thin wrapper around analysis/run_full_experiment_pipeline.py for backward compatibility.
+Thin wrapper around scripts/run_full_experiment_pipeline.py for backward compatibility.
+Prefer: python run.py run-full-experiments
 """
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from analysis.run_full_experiment_pipeline import run_full_experiment_pipeline
+_spec = spec_from_file_location(
+    "run_full_experiment_pipeline",
+    ROOT / "scripts" / "run_full_experiment_pipeline.py",
+)
+_pipeline_mod = module_from_spec(_spec)
+assert _spec.loader is not None
+_spec.loader.exec_module(_pipeline_mod)
+run_full_experiment_pipeline = _pipeline_mod.run_full_experiment_pipeline
 
 
 def run_full_experiments(**kwargs) -> dict:

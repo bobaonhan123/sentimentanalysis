@@ -254,9 +254,17 @@ def main():
             print(f"FastText binary training failed: {result.get('reason', 'unknown')}")
 
     elif args.command == "run-full-experiments":
-        from analysis.run_full_experiment_pipeline import run_full_experiment_pipeline
+        from importlib.util import module_from_spec, spec_from_file_location
 
-        manifest = run_full_experiment_pipeline(
+        spec = spec_from_file_location(
+            "run_full_experiment_pipeline",
+            Path(__file__).resolve().parent / "scripts" / "run_full_experiment_pipeline.py",
+        )
+        pipeline_mod = module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(pipeline_mod)
+
+        manifest = pipeline_mod.run_full_experiment_pipeline(
             vi_csv=args.vi_csv,
             smoke=args.smoke,
             skip_vi_tfidf=args.skip_vi_tfidf,
