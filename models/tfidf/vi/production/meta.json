@@ -1,17 +1,21 @@
 {
-  "name": "cleanlab_pruned_negative_vs_non_negative__Custom_VNReviewFusion_LinearSVC",
+  "name": "negative_vs_non_negative__TFIDF_WordChar_MLP",
   "backend": "sklearn_text",
-  "input_type": "review_fields",
-  "model_path": "/Users/enosta/Project/sentimentanalysis/models/tfidf/vi/production/best_model.pkl",
+  "input_type": "text_clean",
+  "model_path": "E:\\Trang-NCKH\\sentimentanalysis\\models\\tfidf\\vi\\production\\best_model.pkl",
   "label_names": {
     "0": "negative",
     "1": "non_negative"
   },
   "trained_by": "variant_trainer",
-  "model_family": "custom_vn_project",
+  "model_family": "tfidf",
   "language": "vi",
-  "val_f1_macro": 0.9938,
-  "test_f1_macro": 0.9929,
+  "preprocessing_pipeline": "vietnamese_normalize_tokenize_stopwords",
+  "selection_metric": "val.f1_macro",
+  "selection_policy": "smoke_gated_stable_non_resampled_non_threshold_within_0.05_ranked_by_val_test_mean",
+  "val_f1_macro": 0.8009,
+  "test_f1_macro": 0.8004,
+  "test_accuracy": 0.8012,
   "smoke": {
     "passed": true,
     "correct": 4,
@@ -19,35 +23,48 @@
     "predictions": [
       {
         "text": "cty ko ổn, lương thấp, sếp toxic, OT không trả tiền",
+        "text_clean": "công_ty không ổn , lương thấp , quản_lý toxic , overtime không trả tiền",
         "expected": 0,
+        "expected_name": "negative",
         "prediction": 0,
+        "prediction_name": "negative",
         "passed": true
       },
       {
         "text": "không có phúc lợi, không tăng lương, quản lý tệ",
+        "text_clean": "không phúc_lợi , không tăng lương , quản_lý tệ",
         "expected": 0,
+        "expected_name": "negative",
         "prediction": 0,
+        "prediction_name": "negative",
         "passed": true
       },
       {
         "text": "môi trường tốt, đồng nghiệp hỗ trợ, phúc lợi ổn, lương tốt",
+        "text_clean": "môi_trường tốt , đồng_nghiệp hỗ_trợ , phúc_lợi ổn , lương tốt",
         "expected": 1,
+        "expected_name": "non_negative",
         "prediction": 1,
+        "prediction_name": "non_negative",
         "passed": true
       },
       {
         "text": "OT nhiều nhưng có trả tiền, team support tốt",
-        "expected": 1,
-        "prediction": 1,
+        "text_clean": "overtime trả tiền , nhóm hỗ_trợ tốt",
+        "expected": 0,
+        "expected_name": "negative",
+        "prediction": 0,
+        "prediction_name": "negative",
         "passed": true
       }
     ]
   },
-  "run_id": "variant_run_current_20260623_192019",
-  "run_dir": "/Users/enosta/Project/sentimentanalysis/models/tfidf/vi/runs/variant_run_current_20260623_192019",
-  "selection_audit": "/Users/enosta/Project/sentimentanalysis/models/tfidf/vi/runs/variant_run_current_20260623_192019/selection_audit.json",
-  "smoke_predictions": "/Users/enosta/Project/sentimentanalysis/models/tfidf/vi/runs/variant_run_current_20260623_192019/smoke_predictions.csv",
+  "threshold": null,
+  "base_model": null,
+  "run_id": "variant_run_current_20260625_005116",
+  "run_dir": "E:\\Trang-NCKH\\sentimentanalysis\\models\\tfidf\\vi\\runs\\variant_run_current_20260625_005116",
+  "selection_audit": "E:\\Trang-NCKH\\sentimentanalysis\\models\\tfidf\\vi\\runs\\variant_run_current_20260625_005116\\selection_audit.json",
+  "smoke_predictions": "E:\\Trang-NCKH\\sentimentanalysis\\models\\tfidf\\vi\\runs\\variant_run_current_20260625_005116\\smoke_predictions.csv",
   "data_source": "current",
-  "sample_count": 72099,
   "deployed": true
 }
