@@ -30,7 +30,7 @@ Do do, website/dashboard la mot diem cong vi chung minh model co the duoc dua va
 
 ### Scraper
 
-Scraper dung de thu thap review cong ty tu 1900.com.vn. Vi khong co san dataset gan nhan cho mien du lieu workplace review tieng Viet, nhom tu crawl 10,000 review.
+Scraper dung de thu thap review cong ty tu 1900.com.vn. Vi khong co san dataset gan nhan cho mien du lieu workplace review tieng Viet, nhom tu crawl va mo rong thanh corpus 72,100 review.
 
 **Tai sao can scraper?**
 
@@ -58,7 +58,7 @@ Kafka dong vai tro message queue giua producer va consumer.
 - Neu consumer cham, producer van co the day message vao queue.
 - Tang tinh on dinh va mo rong cho pipeline.
 
-Neu giao vien hoi "dataset chi 10,000 review co can Kafka khong?", co the tra loi:
+Neu giao vien hoi "dataset quy mo nay co can Kafka khong?", co the tra loi:
 
 > Voi quy mo hien tai, Kafka khong bat buoc. Tuy nhien, project duoc thiet ke theo huong production pipeline, co the mo rong khi crawl them cong ty hoac chay dinh ky. Kafka la diem cong ve kien truc, khong phai yeu cau toi thieu.
 

@@ -8,6 +8,7 @@ import unicodedata
 
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 
+from src.common.text_repair import repair_mojibake_text
 from src.preprocessing.stopwords_vi import ALL_STOPWORDS
 from src.preprocessing.vietnamese_terms import normalize_vietnamese_terms
 
@@ -23,6 +24,7 @@ NEGATION_WORDS: frozenset[str] = frozenset({
     "ko",
     "k",
 })
+NEGATION_WORDS = frozenset(repair_mojibake_text(word) for word in NEGATION_WORDS)
 ENGLISH_NEGATION_WORDS: frozenset[str] = frozenset({
     "no",
     "not",
@@ -108,6 +110,9 @@ def normalize_text(text: str) -> str:
     if not text:
         return ""
 
+    text = repair_mojibake_text(text)
+    text = html.unescape(str(text))
+
     # Unicode NFC
     text = unicodedata.normalize("NFC", text)
 
@@ -139,6 +144,7 @@ def normalize_english_text(text: str) -> str:
     if not text:
         return ""
 
+    text = repair_mojibake_text(text)
     text = html.unescape(str(text))
     text = unicodedata.normalize("NFKC", text)
 

@@ -18,11 +18,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from src.common.text_repair import repair_mojibake_text, repair_object_columns
+
 logger = logging.getLogger(__name__)
 
 ROOT_DATA = Path(__file__).resolve().parents[2]
 VI_REVIEWS_CSV = ROOT_DATA / "data" / "vi" / "raw" / "1900_export_reviews.csv"
 VI_DATA_CANDIDATES = [
+    ROOT_DATA / "dataset" / "1900_export_reviews (5).csv",
+    ROOT_DATA / "dataset" / "1900_export_reviews.csv",
     VI_REVIEWS_CSV,
     ROOT_DATA / "data_post_processing" / "1900_export_reviews.csv",
     ROOT_DATA / "analysis" / "1900_export_reviews.csv",
@@ -61,6 +65,8 @@ _EN_PLACEHOLDER_NEGATIVE_PATTERNS = [
 _MINIMAL_CONS_TEXTS = {
     "không có", "không", "nan", "none", "n/a", "no", "nothing",
 }
+
+_MINIMAL_CONS_TEXTS = {repair_mojibake_text(value) for value in _MINIMAL_CONS_TEXTS}
 
 
 def _english_field_score(text: str, weight: float, *, suppress_sarcasm: bool) -> float:
@@ -643,13 +649,29 @@ def load_labeled_data(csv_path: str | Path | None = None) -> pd.DataFrame:
     Text is primarily in 'cons' column (most 'pros' are null).
     We combine all available text: title + pros + cons + advice.
     """
-    path = Path(csv_path) if csv_path else VI_REVIEWS_CSV
+    if csv_path:
+        path = Path(csv_path)
+    else:
+        path = next((candidate for candidate in VI_DATA_CANDIDATES if candidate.exists()), VI_REVIEWS_CSV)
 
     if not path.exists():
         logger.error(f"CSV not found: {path}")
         return pd.DataFrame()
 
-    df = pd.read_csv(path, low_memory=False)
+    df = None
+    last_error: UnicodeDecodeError | None = None
+    for encoding in ("utf-8-sig", "utf-8", "cp1258", "latin1"):
+        try:
+            df = pd.read_csv(path, low_memory=False, encoding=encoding)
+            logger.info("Loaded source CSV with encoding=%s", encoding)
+            break
+        except UnicodeDecodeError as exc:
+            last_error = exc
+    if df is None:
+        if last_error is not None:
+            raise last_error
+        raise FileNotFoundError(path)
+    df = repair_object_columns(df, columns=["title", "pros", "cons", "advice", "industry", "employee_status"])
     logger.info(f"Loaded {len(df)} rows from {path.name}")
 
     records = []
@@ -658,7 +680,7 @@ def load_labeled_data(csv_path: str | Path | None = None) -> pd.DataFrame:
         for col in ["title", "pros", "cons", "advice"]:
             val = row.get(col)
             if pd.notna(val) and str(val).strip():
-                parts.append(str(val).strip())
+                parts.append(repair_mojibake_text(val).strip())
         text = " ".join(parts)
 
         if not text:
@@ -668,10 +690,10 @@ def load_labeled_data(csv_path: str | Path | None = None) -> pd.DataFrame:
         if rating_label is None:
             continue
 
-        pros_text = str(row.get("pros") or "")
-        cons_text = str(row.get("cons") or "")
-        advice_text = str(row.get("advice") or "")
-        title_text = str(row.get("title") or "")
+        pros_text = repair_mojibake_text(row.get("pros") or "")
+        cons_text = repair_mojibake_text(row.get("cons") or "")
+        advice_text = repair_mojibake_text(row.get("advice") or "")
+        title_text = repair_mojibake_text(row.get("title") or "")
         label, label_source = weak_label_combine(
             rating_label,
             pros_text,
@@ -697,7 +719,7 @@ def load_labeled_data(csv_path: str | Path | None = None) -> pd.DataFrame:
             "label_source": label_source,
             "binary_sentiment": binary_sentiment,
             "binary_label_source": binary_source,
-            "industry": row.get("industry", ""),
+            "industry": repair_mojibake_text(row.get("industry", "")),
             "dataset_source": "1900_vi",
             "language": "vi",
         })

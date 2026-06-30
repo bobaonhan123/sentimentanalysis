@@ -259,9 +259,11 @@ def _transformer_row(lang: str = "vi") -> pd.DataFrame:
     if not results_path.exists():
         return pd.DataFrame()
     payload = json.loads(results_path.read_text(encoding="utf-8"))
-    test = payload.get("threshold_test") or payload.get("test") or {}
+    test = payload.get("test") or {}
+    threshold_test = payload.get("threshold_test") or {}
     val = payload.get("val") or {}
     report = test.get("classification_report") or {}
+    threshold_report = threshold_test.get("classification_report") or {}
     model_key = payload.get("model_key") or ("DistilBERT" if lang == "en" else "PhoBERT")
     model_family = payload.get("model_family") or model_key
     return pd.DataFrame([{
@@ -276,12 +278,17 @@ def _transformer_row(lang: str = "vi") -> pd.DataFrame:
         f"{lang}_f1_weighted": test.get("f1_weighted"),
         f"{lang}_precision_macro": test.get("precision_macro"),
         f"{lang}_recall_macro": test.get("recall_macro"),
-        f"{lang}_non_positive_f1": (report.get("non_positive") or {}).get("f1-score"),
-        f"{lang}_positive_f1": (report.get("positive") or {}).get("f1-score"),
-        f"{lang}_non_positive_recall": (report.get("non_positive") or {}).get("recall"),
+        f"{lang}_negative_f1": (report.get("negative") or {}).get("f1-score"),
+        f"{lang}_non_negative_f1": (report.get("non_negative") or {}).get("f1-score"),
+        f"{lang}_negative_recall": (report.get("negative") or {}).get("recall"),
+        f"{lang}_negative_f2": payload.get("test", {}).get("negative_f2"),
+        f"{lang}_non_positive_f1": (threshold_report.get("negative") or {}).get("f1-score"),
+        f"{lang}_positive_f1": (threshold_report.get("non_negative") or {}).get("f1-score"),
+        f"{lang}_non_positive_recall": (threshold_report.get("negative") or {}).get("recall"),
+        f"{lang}_non_positive_f2": (payload.get("threshold_test") or {}).get("negative_f2"),
         f"{lang}_smoke_passed": None,
         f"{lang}_threshold": payload.get("threshold"),
-        f"{lang}_best_strategy": f"finetune_{payload.get('epochs', 1)}epoch_threshold",
+        f"{lang}_best_strategy": f"finetune_{payload.get('epochs', 1)}epoch_raw_test",
         f"{lang}_source_run_id": payload.get("run_id"),
         f"{lang}_source_model_name": payload.get("model_name"),
         f"{lang}_pipeline": "phobert",

@@ -77,6 +77,11 @@ def main():
     phobert_binary_p.add_argument("--batch-size", type=int, default=8, help="Batch size")
     phobert_binary_p.add_argument("--max-len", type=int, default=160, help="Max token length")
     phobert_binary_p.add_argument("--device", default=None, choices=["cpu", "cuda", "mps"], help="Force training device")
+    phobert_binary_p.add_argument("--learning-rate", type=float, default=2e-5, help="Optimizer learning rate")
+    phobert_binary_p.add_argument("--grad-accum", type=int, default=1, help="Gradient accumulation steps")
+    phobert_binary_p.add_argument("--early-stopping-patience", type=int, default=2, help="Early stopping patience in epochs")
+    phobert_binary_p.add_argument("--no-balanced-sample", action="store_true", help="Disable forced class balancing when max-examples is used")
+    phobert_binary_p.add_argument("--deploy-production", action="store_true", help="Write checkpoint/results into production paths even for smoke runs")
 
     fasttext_binary_p = sub.add_parser(
         "train-fasttext-binary",
@@ -225,14 +230,21 @@ def main():
             epochs=args.epochs,
             batch_size=args.batch_size,
             max_len=args.max_len,
+            learning_rate=args.learning_rate,
             device_name=args.device,
+            gradient_accumulation_steps=args.grad_accum,
+            early_stopping_patience=args.early_stopping_patience,
+            balanced_sample=not args.no_balanced_sample,
+            deploy_to_production=True if args.deploy_production else None,
         )
         status = result.get("status", "unknown")
         if status == "success":
-            test = result.get("threshold_test") or result.get("test", {})
+            raw_test = result.get("test", {})
+            threshold_test = result.get("threshold_test") or {}
             print(
                 "PhoBERT binary training complete. "
-                f"F1={test.get('f1_macro')} Acc={test.get('accuracy')} "
+                f"raw_test_f1={raw_test.get('f1_macro')} raw_test_acc={raw_test.get('accuracy')} "
+                f"threshold_test_f1={threshold_test.get('f1_macro')} threshold_test_acc={threshold_test.get('accuracy')} "
                 f"threshold={result.get('threshold')}"
             )
         else:

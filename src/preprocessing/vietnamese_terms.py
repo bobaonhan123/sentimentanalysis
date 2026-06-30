@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.common.text_repair import repair_mojibake_text
+
 logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -113,6 +115,11 @@ VIETNAMESE_TERM_MAP: dict[str, str] = {
     "id": "",
 }
 
+NORMALIZED_VIETNAMESE_TERM_MAP: dict[str, str] = {
+    repair_mojibake_text(term): repair_mojibake_text(replacement)
+    for term, replacement in VIETNAMESE_TERM_MAP.items()
+}
+
 NEGATION_FORMS = {"ko", "k", "khong", "hok", "hem", "hong", "kh", "kg"}
 REPEATED_CHAR_RE = re.compile(r"([a-zà-ỹđ])\1{2,}", flags=re.IGNORECASE)
 TOKEN_RE = re.compile(r"(?u)\b[\w.+#-]{1,30}\b")
@@ -124,7 +131,7 @@ def _term_pattern(term: str) -> re.Pattern:
 
 
 _TERM_PATTERNS = [(_term_pattern(term), replacement) for term, replacement in sorted(
-    VIETNAMESE_TERM_MAP.items(),
+    NORMALIZED_VIETNAMESE_TERM_MAP.items(),
     key=lambda item: len(item[0]),
     reverse=True,
 )]
@@ -135,7 +142,7 @@ def normalize_vietnamese_terms(text: str) -> str:
     if not text:
         return ""
 
-    out = str(text)
+    out = repair_mojibake_text(text)
     for pattern, replacement in _TERM_PATTERNS:
         out = pattern.sub(replacement, out)
     out = REPEATED_CHAR_RE.sub(r"\1\1", out)
@@ -163,13 +170,13 @@ def scan_vietnamese_terms(
     texts = df.get(text_col, pd.Series([""] * len(df))).fillna("")
 
     for idx, (text, label) in enumerate(zip(texts, labels, strict=False)):
-        raw = str(text).lower()
-        for term in VIETNAMESE_TERM_MAP:
+        raw = repair_mojibake_text(text).lower()
+        for term in NORMALIZED_VIETNAMESE_TERM_MAP:
             if _term_pattern(term).search(raw):
                 known_hits[term] += 1
                 label_hits[term][str(label)] += 1
                 if len(examples[term]) < 3:
-                    examples[term].append({"row": int(idx), "label": str(label), "text": str(text)[:240]})
+                    examples[term].append({"row": int(idx), "label": str(label), "text": raw[:240]})
 
         for token in TOKEN_RE.findall(raw):
             if len(token) < 2:
@@ -177,14 +184,14 @@ def scan_vietnamese_terms(
             if REPEATED_CHAR_RE.search(token):
                 repeated_hits[token] += 1
             if token.isascii() and any(ch.isalpha() for ch in token):
-                if token not in VIETNAMESE_TERM_MAP and len(token) <= 16:
+                if token not in NORMALIZED_VIETNAMESE_TERM_MAP and len(token) <= 16:
                     unknown_ascii[token] += 1
 
     rows = []
     for term, count in known_hits.most_common():
         rows.append({
             "term": term,
-            "replacement": VIETNAMESE_TERM_MAP[term],
+            "replacement": NORMALIZED_VIETNAMESE_TERM_MAP[term],
             "count": count,
             "labels": dict(label_hits[term]),
             "examples": json.dumps(examples[term], ensure_ascii=False),

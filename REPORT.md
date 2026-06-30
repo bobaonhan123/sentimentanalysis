@@ -257,7 +257,7 @@ All free-text fields are processed through a four-step normalisation pipeline (`
 3. **Vietnamese word segmentation** — applied using `underthesea.word_tokenize(..., format="text")`, which segments multi-syllable Vietnamese words. Falls back to whitespace tokenisation if the library is unavailable.
 4. **Stopword removal** — a domain-specific stopword list (`src/preprocessing/stopwords_vi.py`) built by corpus frequency analysis rather than a generic list, removing high-frequency function words without discarding sentiment-bearing terms.
 
-After preprocessing, reviews with empty processed text are discarded. The effective training pool is **10,000 reviews**.
+After preprocessing, reviews with empty processed text are discarded. Earlier 10,000-review subset summaries were exploratory only and are no longer treated as the current benchmark source.
 
 ### 5.2 Rule-Based ABSA
 

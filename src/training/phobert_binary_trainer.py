@@ -266,6 +266,9 @@ def train_phobert_binary(
     seed: int = 42,
     balanced_sample: bool = True,
     device_name: str | None = None,
+    gradient_accumulation_steps: int = 1,
+    early_stopping_patience: int = 2,
+    deploy_to_production: bool | None = None,
 ) -> dict:
     """Run a binary transformer fine-tune (PhoBERT for VI, DistilBERT for EN)."""
     _seed_everything(seed)
@@ -274,6 +277,10 @@ def train_phobert_binary(
         return {"status": "failed", "reason": f"unsupported_language:{lang}"}
     cfg = MODEL_CONFIG[lang]
     model_name = cfg["model_name"]
+    if lang == "vi" and learning_rate == 2e-5:
+        learning_rate = 1e-5
+    if deploy_to_production is None:
+        deploy_to_production = not (max_examples and max_examples > 0)
 
     paths = phobert_paths(lang)
     paths.ensure_dirs()
@@ -286,18 +293,6 @@ def train_phobert_binary(
     run_dir.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
     device = torch.device(device_name) if device_name else _device()
-    logger.info(
-        "TRANSFORMER_BINARY | run_id=%s lang=%s model=%s device=%s max_examples=%s epochs=%s batch_size=%s max_len=%s",
-        run_id,
-        lang,
-        model_name,
-        device,
-        max_examples,
-        epochs,
-        batch_size,
-        max_len,
-    )
-
     with StepTimer("load weak-labeled data"):
         df = _load_binary_frame(
             csv_path=csv_path,
@@ -351,6 +346,27 @@ def train_phobert_binary(
         collate_fn=collator,
     )
 
+    gradient_accumulation_steps = max(
+        1,
+        gradient_accumulation_steps,
+        16 // max(1, batch_size),
+    )
+    effective_batch_size = batch_size * gradient_accumulation_steps
+    logger.info(
+        "TRANSFORMER_BINARY | run_id=%s lang=%s model=%s device=%s max_examples=%s epochs=%s batch_size=%s max_len=%s grad_accum=%s effective_batch=%s lr=%s",
+        run_id,
+        lang,
+        model_name,
+        device,
+        max_examples,
+        epochs,
+        batch_size,
+        max_len,
+        gradient_accumulation_steps,
+        effective_batch_size,
+        learning_rate,
+    )
+
     class_weights = compute_class_weight(
         class_weight="balanced",
         classes=np.array([0, 1]),
@@ -358,56 +374,98 @@ def train_phobert_binary(
     )
     loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float32).to(device))
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-    total_steps = max(1, len(train_loader) * epochs)
+    steps_per_epoch = max(1, int(np.ceil(len(train_loader) / gradient_accumulation_steps)))
+    total_steps = max(1, steps_per_epoch * epochs)
+    warmup_steps = 0 if total_steps <= 10 else min(int(total_steps * 0.1), total_steps - 1)
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
-        num_warmup_steps=max(1, int(total_steps * 0.1)),
+        num_warmup_steps=warmup_steps,
         num_training_steps=total_steps,
     )
 
     history = []
     best_val_f1 = -1.0
-    best_dir = paths.phobert_production_checkpoint()
+    best_checkpoint_score = -1.0
+    best_epoch = 0
+    epochs_without_improvement = 0
+    optimizer_steps_taken = 0
+    best_dir = paths.phobert_production_checkpoint() if deploy_to_production else (run_dir / "best_checkpoint")
     run_checkpoint_dir = run_dir / "checkpoint"
     with StepTimer(f"fine-tune {cfg['model_key']}"):
         for epoch in range(1, epochs + 1):
             model.train()
             losses = []
             progress = tqdm(train_loader, desc=f"{cfg['model_key']} epoch {epoch}/{epochs}", leave=False)
-            for batch in progress:
+            optimizer.zero_grad(set_to_none=True)
+            for step, batch in enumerate(progress, start=1):
                 labels = batch.pop("labels").to(device)
                 batch = {k: v.to(device) for k, v in batch.items()}
-                optimizer.zero_grad(set_to_none=True)
                 outputs = model(**batch)
-                loss = loss_fn(outputs.logits, labels)
+                loss = loss_fn(outputs.logits, labels) / max(1, gradient_accumulation_steps)
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                optimizer.step()
-                scheduler.step()
-                if device.type == "mps":
-                    torch.mps.empty_cache()
-                losses.append(float(loss.detach().cpu()))
+                if step % max(1, gradient_accumulation_steps) == 0 or step == len(train_loader):
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                    optimizer.step()
+                    scheduler.step()
+                    optimizer.zero_grad(set_to_none=True)
+                    optimizer_steps_taken += 1
+                    if device.type == "mps":
+                        torch.mps.empty_cache()
+                losses.append(float(loss.detach().cpu()) * max(1, gradient_accumulation_steps))
                 progress.set_postfix(loss=f"{np.mean(losses):.4f}")
 
             y_val, pred_val, proba_val = _predict_logits(model, val_loader, device)
             val_metrics = _evaluate(y_val, pred_val, proba_val)
+            val_threshold_metrics = val_metrics.get("threshold_metrics") or val_metrics
+            checkpoint_score = float(val_metrics.get("f1_macro", 0.0))
+            checkpoint_negative_f2 = float(val_metrics.get("negative_f2", 0.0))
             row = {
                 "epoch": epoch,
                 "train_loss": round(float(np.mean(losses)), 4),
                 "val_f1_macro": val_metrics["f1_macro"],
                 "val_accuracy": val_metrics["accuracy"],
                 "val_threshold": val_metrics["best_threshold"],
+                "val_threshold_f1_macro": val_threshold_metrics.get("f1_macro"),
+                "val_negative_f2": val_metrics.get("negative_f2"),
+                "checkpoint_score": round(checkpoint_score, 4),
             }
             history.append(row)
             logger.info("EPOCH | %s", row)
-            if val_metrics["f1_macro"] > best_val_f1:
+            if (
+                checkpoint_score > best_checkpoint_score
+                or (
+                    checkpoint_score == best_checkpoint_score
+                    and checkpoint_negative_f2 > float(history[best_epoch - 1].get("val_negative_f2", -1.0) if best_epoch else -1.0)
+                )
+            ):
+                best_checkpoint_score = checkpoint_score
                 best_val_f1 = val_metrics["f1_macro"]
+                best_epoch = epoch
+                epochs_without_improvement = 0
                 model.save_pretrained(best_dir)
                 tokenizer.save_pretrained(best_dir)
                 run_checkpoint_dir.mkdir(parents=True, exist_ok=True)
                 model.save_pretrained(run_checkpoint_dir)
                 tokenizer.save_pretrained(run_checkpoint_dir)
-                logger.info("BEST_SAVED | epoch=%s val_f1=%s path=%s", epoch, best_val_f1, best_dir)
+                logger.info(
+                    "BEST_SAVED | epoch=%s val_f1=%s threshold_f1=%s neg_f2=%s path=%s",
+                    epoch,
+                    best_val_f1,
+                    val_threshold_metrics.get("f1_macro"),
+                    val_metrics.get("negative_f2"),
+                    best_dir,
+                )
+            else:
+                epochs_without_improvement += 1
+                if epochs_without_improvement >= max(1, early_stopping_patience):
+                    logger.info(
+                        "EARLY_STOP | epoch=%s best_epoch=%s best_val_f1=%s patience=%s",
+                        epoch,
+                        best_epoch,
+                        best_val_f1,
+                        early_stopping_patience,
+                    )
+                    break
 
     with StepTimer(f"evaluate best {cfg['model_key']}"):
         model = AutoModelForSequenceClassification.from_pretrained(best_dir).to(device)
@@ -435,6 +493,11 @@ def train_phobert_binary(
         "max_len": max_len,
         "max_examples": max_examples,
         "balanced_sample": balanced_sample,
+        "gradient_accumulation_steps": gradient_accumulation_steps,
+        "effective_batch_size": effective_batch_size,
+        "early_stopping_patience": early_stopping_patience,
+        "deploy_to_production": deploy_to_production,
+        "optimizer_steps": optimizer_steps_taken,
         "class_weights": [round(float(x), 4) for x in class_weights],
         "split": {"train": len(train_df), "val": len(val_df), "test": len(test_df)},
         "history": history,
@@ -451,10 +514,11 @@ def train_phobert_binary(
         json.dumps(result, indent=2, ensure_ascii=False, default=str),
         encoding="utf-8",
     )
-    paths.production_dir.joinpath("results.json").write_text(
-        json.dumps(result, indent=2, ensure_ascii=False, default=str),
-        encoding="utf-8",
-    )
+    if deploy_to_production:
+        paths.production_dir.joinpath("results.json").write_text(
+            json.dumps(result, indent=2, ensure_ascii=False, default=str),
+            encoding="utf-8",
+        )
     pd.DataFrame(history).to_csv(run_dir / "history.csv", index=False, encoding="utf-8-sig")
     logger.info(
         "PHOBERT_BINARY_DONE | lang=%s val_f1=%s test_f1=%s threshold=%s threshold_test_f1=%s duration=%.2fs",
