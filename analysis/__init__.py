@@ -1,1 +1,1 @@
-"""Analysis scripts and experiment orchestration."""
+"""Analysis outputs, notebooks, and reporting scripts (not training entry points)."""

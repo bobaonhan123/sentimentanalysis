@@ -70,7 +70,18 @@ pip install torch transformers
 
 Yêu cầu: **Python 3.11+** (`requires-python` trong `pyproject.toml`). Không có `requirements.txt`.
 
+### Windows (sau `git pull` / clone)
+
+Sau khi clone, bạn sẽ thấy `data/vi/raw/` và `data/en/glassdoor/` (file `.gitkeep` + `data/README.md`). **CSV và parquet vẫn không có trong Git.**
+
+1. Kích hoạt venv: `.venv\Scripts\activate`
+2. **Tiếng Việt:** copy `1900_export_reviews.csv` vào `data\vi\raw\` (hoặc chạy crawl — xem mục CSV bên dưới). Nếu thiếu thư mục: `mkdir data\vi\raw`
+3. **Tiếng Anh:** không cần copy; chạy `python run.py run-full-experiments` hoặc `python scripts\cache_glassdoor.py` — parquet sẽ được tạo trong `data\en\glassdoor\`.
+
 ### 2. Những gì KHÔNG có trong Git — lấy ở đâu
+
+> **Lưu ý:** Thư mục `data/` có trong repo (placeholder `.gitkeep`); chỉ **nội dung** CSV/parquet bị ignore (xem `.gitignore`).
+
 
 | Thành phần | Trong Git? | Cách có trên máy mới |
 |------------|------------|----------------------|
@@ -102,7 +113,8 @@ Hoặc copy file CSV từ máy đã train (~72k dòng).
 
 | | Smoke test | Pipeline đầy đủ |
 |---|------------|-----------------|
-| Lệnh | `python analysis/run_full_experiment_pipeline.py --smoke` | `python analysis/run_full_experiment_pipeline.py` |
+| Lệnh (khuyến nghị) | `python run.py run-full-experiments --smoke` | `python run.py run-full-experiments` |
+| Lệnh script trực tiếp | `python scripts/run_full_experiment_pipeline.py --smoke` | `python scripts/run_full_experiment_pipeline.py` |
 | Dữ liệu VI | ≥600 dòng (mặc định lấy 600) | Toàn bộ (~72k) |
 | Dữ liệu EN | ~1500 dòng (tải HF) | Toàn bộ (~838k, tải HF) |
 | Transformer | 256 mẫu, 1 epoch | Full data, 3 epoch |
@@ -114,8 +126,14 @@ Smoke chạy **tất cả** họ mô hình (TF-IDF, FastText, PhoBERT/DistilBERT
 Bỏ qua bước chậm khi full:
 
 ```bash
-.venv/bin/python analysis/run_full_experiment_pipeline.py \
+.venv/bin/python run.py run-full-experiments \
   --skip-vi-phobert --skip-en-fasttext
+```
+
+Windows (PowerShell):
+
+```powershell
+.venv\Scripts\python run.py run-full-experiments --skip-vi-phobert --skip-en-fasttext
 ```
 
 ### 4. Docker (tùy chọn)
@@ -204,18 +222,26 @@ Mô hình frozen FastText dùng cho FastText + sklearn/MLP:
 
 ## Chạy thử nghiệm
 
+**CLI chính:** `python run.py run-full-experiments` (smoke: thêm `--smoke`). Script trực tiếp: `scripts/run_full_experiment_pipeline.py`.
+
 ### Smoke test (nhanh, ~ vài phút)
 
 ~600 dòng VI + ~1500 dòng EN, transformer 1 epoch:
 
 ```bash
-.venv/bin/python analysis/run_full_experiment_pipeline.py --smoke
+.venv/bin/python run.py run-full-experiments --smoke
 ```
 
-Tương đương:
+Windows (PowerShell):
+
+```powershell
+.venv\Scripts\python run.py run-full-experiments --smoke
+```
+
+Tương đương (script trực tiếp):
 
 ```bash
-.venv/bin/python run.py run-full-experiments --smoke
+.venv/bin/python scripts/run_full_experiment_pipeline.py --smoke
 ```
 
 Pipeline smoke chạy **tất cả** họ mô hình trên cả VI và EN (TF-IDF, FastText, PhoBERT/DistilBERT).
@@ -225,13 +251,26 @@ Pipeline smoke chạy **tất cả** họ mô hình trên cả VI và EN (TF-IDF
 Toàn bộ dữ liệu; deploy mô hình TF-IDF VI tốt nhất vào `models/tfidf/vi/production/`:
 
 ```bash
-.venv/bin/python analysis/run_full_experiment_pipeline.py
+.venv/bin/python run.py run-full-experiments
+```
+
+Windows (PowerShell):
+
+```powershell
+.venv\Scripts\python run.py run-full-experiments
 ```
 
 Tùy chọn bỏ qua bước chậm:
 
 ```bash
-.venv/bin/python analysis/run_full_experiment_pipeline.py \
+.venv/bin/python run.py run-full-experiments \
+  --skip-vi-phobert --skip-en-fasttext
+```
+
+Hoặc script trực tiếp:
+
+```bash
+.venv/bin/python scripts/run_full_experiment_pipeline.py \
   --skip-vi-phobert --skip-en-fasttext
 ```
 
@@ -296,10 +335,10 @@ Log chạy nền thường nằm trong `models/statistics/*.log`.
 
 ```
 sentimentanalysis/
-├── run.py                          # CLI chính
-├── analysis/
-│   └── run_full_experiment_pipeline.py   # Pipeline thống nhất VI + EN
+├── run.py                          # CLI chính (run-full-experiments, train-*, crawl, …)
+├── analysis/                       # Notebook, báo cáo, output phân tích (ABSA charts, …)
 ├── scripts/
+│   ├── run_full_experiment_pipeline.py   # Pipeline thống nhất VI + EN (gọi qua run.py)
 │   ├── build_final_statistics.py   # Tổng hợp CSV thống kê
 │   └── cache_glassdoor.py        # Cache EN parquet
 ├── src/

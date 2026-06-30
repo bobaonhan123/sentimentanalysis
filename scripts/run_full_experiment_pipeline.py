@@ -9,17 +9,13 @@ Runs all model families on Vietnamese (~72k) and English Glassdoor (~838k) data:
 After training, builds a statistics table with one row per distinct algorithm/strategy.
 
 Usage:
-  # Quick smoke test (~600 VI + ~1500 EN rows, 1 transformer epoch)
-  python analysis/run_full_experiment_pipeline.py --smoke
-
-  # Full-scale run (all data, deploy best VI TF-IDF to production/)
-  python analysis/run_full_experiment_pipeline.py
-
-  # Partial run (skip slow steps)
-  python analysis/run_full_experiment_pipeline.py --skip-vi-phobert --skip-en-fasttext
-
-Equivalent via run.py:
+  # Preferred CLI
   python run.py run-full-experiments [--smoke]
+
+  # Direct script (same pipeline)
+  python scripts/run_full_experiment_pipeline.py --smoke
+  python scripts/run_full_experiment_pipeline.py
+  python scripts/run_full_experiment_pipeline.py --skip-vi-phobert --skip-en-fasttext
 """
 from __future__ import annotations
 
