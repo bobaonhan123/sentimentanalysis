@@ -4,7 +4,7 @@
 
 The current working dataset is:
 
-- `dataset/1900_export_reviews (5).csv`
+- `data/vi/raw/1900_export_reviews.csv`
 - `72,100` Vietnamese workplace reviews
 
 The active research direction is no longer generic 3-class sentiment classification. It is now:
@@ -34,7 +34,7 @@ From the active binary weak-labeling pipeline:
 
 ## Best Full-Run Result
 
-Latest full run on `dataset/1900_export_reviews (5).csv`:
+Latest full run on `data/vi/raw/1900_export_reviews.csv`:
 
 - best model: `TFIDF_WordChar_LinearSVC`
 - negative precision: `0.7988`
@@ -77,5 +77,5 @@ python run.py predict-binary --text "review text here"
 ## Notes
 
 - `data_post_processing/1900_export_reviews.csv` is legacy and no longer the default source.
-- `dataset/1900_export_reviews (5).csv` is now the canonical review CSV for the active Python pipeline.
+- `data/vi/raw/1900_export_reviews.csv` is now the canonical review CSV for the active Python pipeline.
 - `PhoBERT_Binary` is still skipped in this environment because `torch` is not installed.

@@ -25,9 +25,8 @@ logger = logging.getLogger(__name__)
 ROOT_DATA = Path(__file__).resolve().parents[2]
 VI_REVIEWS_CSV = ROOT_DATA / "data" / "vi" / "raw" / "1900_export_reviews.csv"
 VI_DATA_CANDIDATES = [
-    ROOT_DATA / "dataset" / "1900_export_reviews (5).csv",
-    ROOT_DATA / "dataset" / "1900_export_reviews.csv",
     VI_REVIEWS_CSV,
+    ROOT_DATA / "data" / "vi" / "raw" / "1900_export_reviews (5).csv",
     ROOT_DATA / "data_post_processing" / "1900_export_reviews.csv",
     ROOT_DATA / "analysis" / "1900_export_reviews.csv",
 ]
